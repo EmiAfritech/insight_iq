@@ -1,0 +1,59 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Production
+dist/
+build/
+
+# Vite cache
+.vite/
+
+# Env files
+.env
+.env.*.local
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+
+# Typescript cache
+*.tsbuildinfo
+
+# Testing
+coverage/
+
+# Optional: OS/Editor swap files
+*.swp
+*.tmp
+
+# Optional: Local dev artifacts
+*.local
+*.bak
+*.orig
+
+# Mac Trash
+.Trashes
+
+# VS Code settings
+.vscode/
+
+# Custom cache folders
+.cache/
+out/
+
+# Ignore compiled public assets (if built)
+public/build/
