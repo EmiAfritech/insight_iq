@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   metabase:
@@ -19,6 +18,7 @@ services:
       MB_ADMIN_EMAIL: ${MB_ADMIN_EMAIL}
     depends_on:
       - metabase-db
+    restart: always  # <- This ensures it starts on reboot
     networks:
       - metanet
 

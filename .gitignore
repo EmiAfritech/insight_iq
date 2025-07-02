@@ -5,55 +5,45 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Vite cache
+.vite/
+
 # Production
 dist/
 build/
 
-# Vite cache
-.vite/
-
-# Env files
-.env
-.env.*.local
-
-# System
-.DS_Store
-Thumbs.db
-
-# IDEs
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
+# TypeScript
+*.tsbuildinfo
 
 # Logs
 logs/
 *.log
 
-# Typescript cache
-*.tsbuildinfo
+# Env files
+.env
+.env.*.local
+
+# Docker volumes (persistent DB data)
+metabase_db_data/
+
+# MacOS / Windows / Editor junk
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+*.bak
+*.orig
+
+# Editor settings
+.vscode/
+.idea/
 
 # Testing
 coverage/
 
-# Optional: OS/Editor swap files
-*.swp
-*.tmp
-
-# Optional: Local dev artifacts
-*.local
-*.bak
-*.orig
-
-# Mac Trash
-.Trashes
-
-# VS Code settings
-.vscode/
-
-# Custom cache folders
+# Custom
 .cache/
 out/
 
-# Ignore compiled public assets (if built)
-public/build/
+# Optional: Metabase exports or backups
+metabase-export/
