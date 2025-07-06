@@ -1,0 +1,470 @@
+{% extends 'public_base.html' %}
+{% load static %}
+
+{% block title %}Contact Us - InsightIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+    
+    .section-padding {
+        padding: 80px 0;
+    }
+    
+    .contact-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 2rem;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .contact-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+    
+    .contact-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        padding: 80px 0;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 3rem;
+    }
+    
+    .form-control {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        border-radius: 10px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .office-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        padding: 2rem;
+        text-align: center;
+        height: 100%;
+    }
+    
+    .office-image {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+        color: white;
+    }
+    
+    .faq-section {
+        padding: 80px 0;
+    }
+    
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+        text-align: center;
+        color: #333;
+    }
+    
+    .support-hours {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+    
+    .hours-card {
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .alert-success {
+        border-radius: 10px;
+        border: none;
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .alert-danger {
+        border-radius: 10px;
+        border: none;
+        background: #f8d7da;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">Get in Touch</h1>
+        <p class="lead mb-4">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+    </div>
+</section>
+
+<!-- Contact Options -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="contact-card text-center">
+                    <i class="fas fa-envelope contact-icon text-primary"></i>
+                    <h5>Email Us</h5>
+                    <p class="text-muted mb-3">Send us an email and we'll get back to you within 24 hours.</p>
+                    <a href="mailto:support@insightiq.com" class="btn btn-outline-primary">
+                        support@insightiq.com
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="contact-card text-center">
+                    <i class="fas fa-phone contact-icon text-success"></i>
+                    <h5>Call Us</h5>
+                    <p class="text-muted mb-3">Speak with our sales team to discuss your needs.</p>
+                    <a href="tel:+1-555-123-4567" class="btn btn-outline-success">
+                        +1 (555) 123-4567
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="contact-card text-center">
+                    <i class="fas fa-comments contact-icon text-info"></i>
+                    <h5>Live Chat</h5>
+                    <p class="text-muted mb-3">Chat with our support team in real-time.</p>
+                    <button class="btn btn-outline-info" onclick="startChat()">
+                        Start Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Form -->
+<section class="form-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="form-card">
+                    <h2 class="text-center mb-4">Send us a Message</h2>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" id="contactForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="company" class="form-label">Company</label>
+                            <input type="text" class="form-control" id="company" name="company">
+                        </div>
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Subject *</label>
+                            <select class="form-control" id="subject" name="subject" required>
+                                <option value="">Select a subject...</option>
+                                <option value="general">General Inquiry</option>
+                                <option value="sales">Sales & Pricing</option>
+                                <option value="support">Technical Support</option>
+                                <option value="partnership">Partnership</option>
+                                <option value="demo">Request Demo</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message *</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required placeholder="Tell us about your needs or questions..."></textarea>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="newsletter" name="newsletter">
+                            <label class="form-check-label" for="newsletter">
+                                I'd like to receive updates and newsletters from InsightIQ
+                            </label>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Support Hours -->
+<section class="support-hours">
+    <div class="container">
+        <h2 class="mb-4">Support Hours</h2>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="hours-card">
+                            <h5>Email Support</h5>
+                            <p class="mb-0">24/7 Response</p>
+                            <small>Usually within 2-4 hours</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="hours-card">
+                            <h5>Phone Support</h5>
+                            <p class="mb-0">Monday - Friday</p>
+                            <small>9:00 AM - 6:00 PM EST</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="hours-card">
+                            <h5>Live Chat</h5>
+                            <p class="mb-0">Monday - Friday</p>
+                            <small>9:00 AM - 6:00 PM EST</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Offices -->
+<section class="section-padding">
+    <div class="container">
+        <h2 class="section-title">Our Offices</h2>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="office-card">
+                    <div class="office-image">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h5>San Francisco</h5>
+                    <p class="text-muted mb-3">Headquarters</p>
+                    <p>
+                        123 Market Street<br>
+                        San Francisco, CA 94103<br>
+                        United States
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="office-card">
+                    <div class="office-image">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h5>New York</h5>
+                    <p class="text-muted mb-3">Sales Office</p>
+                    <p>
+                        456 Broadway<br>
+                        New York, NY 10013<br>
+                        United States
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="office-card">
+                    <div class="office-image">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h5>London</h5>
+                    <p class="text-muted mb-3">European Office</p>
+                    <p>
+                        789 Oxford Street<br>
+                        London, W1C 1JN<br>
+                        United Kingdom
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="faq-section">
+    <div class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq1">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                                How quickly can I get started?
+                            </button>
+                        </h2>
+                        <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You can sign up and start using InsightIQ immediately. Our onboarding process takes less than 5 minutes, and you can upload your first dataset right away.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq2">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                                Do you offer training and support?
+                            </button>
+                        </h2>
+                        <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! We offer comprehensive training resources, documentation, video tutorials, and dedicated support to help you get the most out of InsightIQ.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq3">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                                Can I integrate InsightIQ with my existing tools?
+                            </button>
+                        </h2>
+                        <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Absolutely! InsightIQ offers robust API integration and supports connections to popular business tools, databases, and cloud services.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq4">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+                                What about data security and privacy?
+                            </button>
+                        </h2>
+                        <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We take security seriously. All data is encrypted in transit and at rest, and we're compliant with major security standards including SOC 2 and GDPR.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq5">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">
+                                Can I schedule a demo?
+                            </button>
+                        </h2>
+                        <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! Contact our sales team to schedule a personalized demo. We'll show you exactly how InsightIQ can work for your specific use case.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function startChat() {
+    // This would typically integrate with a chat service like Intercom, Zendesk, etc.
+    alert('Live chat coming soon! Please use email or phone for now.');
+}
+
+// Form validation and submission
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    const requiredFields = ['first_name', 'last_name', 'email', 'subject', 'message'];
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        const input = document.getElementById(field);
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+    }
+});
+
+// Remove validation styling on input
+document.querySelectorAll('input, select, textarea').forEach(input => {
+    input.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+});
+</script>
+
+<style>
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+</style>
+{% endblock %}

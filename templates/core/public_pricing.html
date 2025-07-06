@@ -1,0 +1,470 @@
+{% extends 'public_base.html' %}
+{% load static %}
+
+{% block title %}Pricing - InsightIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+    
+    .pricing-section {
+        padding: 80px 0;
+    }
+    
+    .pricing-card {
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .pricing-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    
+    .pricing-card.featured {
+        border-color: #667eea;
+        transform: scale(1.05);
+    }
+    
+    .pricing-card.featured .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .pricing-card .card-header {
+        background: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .pricing-card .card-body {
+        padding: 2rem;
+    }
+    
+    .price {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .price-period {
+        color: #6c757d;
+        font-size: 1rem;
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 2rem 0;
+    }
+    
+    .feature-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .feature-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .feature-check {
+        color: #28a745;
+        margin-right: 0.5rem;
+    }
+    
+    .feature-cross {
+        color: #dc3545;
+        margin-right: 0.5rem;
+    }
+    
+    .popular-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transform: rotate(15deg);
+    }
+    
+    .faq-section {
+        background: #f8f9fa;
+        padding: 80px 0;
+    }
+    
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+        text-align: center;
+        color: #333;
+    }
+    
+    .comparison-table {
+        margin-top: 4rem;
+    }
+    
+    .comparison-table th {
+        background: #f8f9fa;
+        border: none;
+        padding: 1.5rem;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .comparison-table td {
+        padding: 1rem 1.5rem;
+        text-align: center;
+        border: 1px solid #e9ecef;
+    }
+    
+    .enterprise-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">Simple, Transparent Pricing</h1>
+        <p class="lead mb-4">Choose the plan that's right for your business. Start free, upgrade anytime.</p>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="billing" id="monthly" autocomplete="off" checked>
+                    <label class="btn btn-outline-light" for="monthly">Monthly</label>
+                    
+                    <input type="radio" class="btn-check" name="billing" id="yearly" autocomplete="off">
+                    <label class="btn btn-outline-light" for="yearly">Yearly <span class="badge bg-success ms-2">Save 20%</span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Cards -->
+<section class="pricing-section">
+    <div class="container">
+        <div class="row">
+            <!-- Starter Plan -->
+            <div class="col-lg-4 mb-4">
+                <div class="card pricing-card">
+                    <div class="card-header">
+                        <h3 class="mb-3">Starter</h3>
+                        <div class="price">$0</div>
+                        <div class="price-period">forever</div>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Perfect for individuals and small teams getting started with data analysis.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check feature-check"></i>Up to 3 datasets</li>
+                            <li><i class="fas fa-check feature-check"></i>Basic analytics</li>
+                            <li><i class="fas fa-check feature-check"></i>5 dashboards</li>
+                            <li><i class="fas fa-check feature-check"></i>Standard visualizations</li>
+                            <li><i class="fas fa-check feature-check"></i>Email support</li>
+                            <li><i class="fas fa-times feature-cross"></i>AI insights</li>
+                            <li><i class="fas fa-times feature-cross"></i>Advanced analytics</li>
+                            <li><i class="fas fa-times feature-cross"></i>API access</li>
+                        </ul>
+                        <div class="text-center">
+                            <a href="{% url 'tenants:register' %}" class="btn btn-outline-primary btn-lg w-100">
+                                Get Started Free
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Plan -->
+            <div class="col-lg-4 mb-4">
+                <div class="card pricing-card featured">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="card-header">
+                        <h3 class="mb-3">Professional</h3>
+                        <div class="price" data-monthly="$29" data-yearly="$23">$29</div>
+                        <div class="price-period">per month</div>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Ideal for growing teams that need advanced analytics and AI insights.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check feature-check"></i>Unlimited datasets</li>
+                            <li><i class="fas fa-check feature-check"></i>Advanced analytics</li>
+                            <li><i class="fas fa-check feature-check"></i>Unlimited dashboards</li>
+                            <li><i class="fas fa-check feature-check"></i>AI-powered insights</li>
+                            <li><i class="fas fa-check feature-check"></i>Custom visualizations</li>
+                            <li><i class="fas fa-check feature-check"></i>Priority support</li>
+                            <li><i class="fas fa-check feature-check"></i>Data export</li>
+                            <li><i class="fas fa-check feature-check"></i>Team collaboration</li>
+                        </ul>
+                        <div class="text-center">
+                            <a href="{% url 'tenants:register' %}" class="btn btn-primary btn-lg w-100">
+                                Start Free Trial
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="col-lg-4 mb-4">
+                <div class="card pricing-card">
+                    <div class="card-header">
+                        <h3 class="mb-3">Enterprise</h3>
+                        <div class="price" data-monthly="$99" data-yearly="$79">$99</div>
+                        <div class="price-period">per month</div>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">For large organizations requiring enterprise-grade features and support.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check feature-check"></i>Everything in Professional</li>
+                            <li><i class="fas fa-check feature-check"></i>White-label solution</li>
+                            <li><i class="fas fa-check feature-check"></i>Advanced security</li>
+                            <li><i class="fas fa-check feature-check"></i>Custom integrations</li>
+                            <li><i class="fas fa-check feature-check"></i>Dedicated support</li>
+                            <li><i class="fas fa-check feature-check"></i>SLA guarantee</li>
+                            <li><i class="fas fa-check feature-check"></i>On-premise deployment</li>
+                            <li><i class="fas fa-check feature-check"></i>Custom training</li>
+                        </ul>
+                        <div class="text-center">
+                            <a href="{% url 'core:public_contact' %}" class="btn btn-outline-primary btn-lg w-100">
+                                Contact Sales
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Feature Comparison -->
+<section class="comparison-section">
+    <div class="container">
+        <h2 class="section-title">Feature Comparison</h2>
+        <div class="table-responsive comparison-table">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Starter</th>
+                        <th>Professional</th>
+                        <th>Enterprise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-start fw-bold">Datasets</td>
+                        <td>3</td>
+                        <td>Unlimited</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td class="text-start fw-bold">Dashboards</td>
+                        <td>5</td>
+                        <td>Unlimited</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td class="text-start fw-bold">Users</td>
+                        <td>1</td>
+                        <td>10</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td class="text-start fw-bold">AI Insights</td>
+                        <td><i class="fas fa-times text-danger"></i></td>
+                        <td><i class="fas fa-check text-success"></i></td>
+                        <td><i class="fas fa-check text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="text-start fw-bold">API Access</td>
+                        <td><i class="fas fa-times text-danger"></i></td>
+                        <td><i class="fas fa-check text-success"></i></td>
+                        <td><i class="fas fa-check text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="text-start fw-bold">White-label</td>
+                        <td><i class="fas fa-times text-danger"></i></td>
+                        <td><i class="fas fa-times text-danger"></i></td>
+                        <td><i class="fas fa-check text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="text-start fw-bold">Priority Support</td>
+                        <td><i class="fas fa-times text-danger"></i></td>
+                        <td><i class="fas fa-check text-success"></i></td>
+                        <td><i class="fas fa-check text-success"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="text-start fw-bold">SLA</td>
+                        <td><i class="fas fa-times text-danger"></i></td>
+                        <td><i class="fas fa-times text-danger"></i></td>
+                        <td><i class="fas fa-check text-success"></i></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Enterprise Section -->
+<section class="enterprise-section">
+    <div class="container">
+        <h2 class="display-5 fw-bold mb-4">Need a Custom Solution?</h2>
+        <p class="lead mb-4">We offer custom enterprise solutions tailored to your specific needs and requirements.</p>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-shield-alt mb-2" style="font-size: 2rem;"></i>
+                            <h5>Enhanced Security</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-cogs mb-2" style="font-size: 2rem;"></i>
+                            <h5>Custom Integrations</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-headset mb-2" style="font-size: 2rem;"></i>
+                            <h5>Dedicated Support</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="{% url 'core:public_contact' %}" class="btn btn-light btn-lg mt-4">
+            <i class="fas fa-phone me-2"></i>Contact Our Sales Team
+        </a>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="faq-section">
+    <div class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq1">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                                Can I change my plan anytime?
+                            </button>
+                        </h2>
+                        <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately and you'll be billed prorated.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq2">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                                Is there a free trial?
+                            </button>
+                        </h2>
+                        <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! All paid plans come with a 14-day free trial. No credit card required to start.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq3">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                                What payment methods do you accept?
+                            </button>
+                        </h2>
+                        <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We accept all major credit cards, PayPal, and bank transfers for enterprise customers.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq4">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+                                Can I cancel anytime?
+                            </button>
+                        </h2>
+                        <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Absolutely! You can cancel your subscription at any time. Your account will remain active until the end of your billing period.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq5">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">
+                                Is my data secure?
+                            </button>
+                        </h2>
+                        <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! We use bank-level encryption and security measures. Your data is always encrypted in transit and at rest.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Pricing toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const monthlyBtn = document.getElementById('monthly');
+    const yearlyBtn = document.getElementById('yearly');
+    const prices = document.querySelectorAll('.price');
+    
+    function updatePrices() {
+        prices.forEach(price => {
+            const monthly = price.getAttribute('data-monthly');
+            const yearly = price.getAttribute('data-yearly');
+            
+            if (monthly && yearly) {
+                if (yearlyBtn.checked) {
+                    price.textContent = yearly;
+                } else {
+                    price.textContent = monthly;
+                }
+            }
+        });
+    }
+    
+    monthlyBtn.addEventListener('change', updatePrices);
+    yearlyBtn.addEventListener('change', updatePrices);
+    
+    // Initialize prices
+    updatePrices();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,312 @@
+{% extends 'public_base.html' %}
+{% load static %}
+
+{% block title %}Features - InsightIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+    
+    .feature-card {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .feature-section {
+        padding: 80px 0;
+    }
+    
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+        text-align: center;
+        color: #333;
+    }
+    
+    .feature-grid {
+        margin-bottom: 80px;
+    }
+    
+    .demo-section {
+        background: #f8f9fa;
+        padding: 80px 0;
+    }
+    
+    .screenshot-container {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    
+    .integration-logos {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .integration-logo {
+        width: 120px;
+        height: 60px;
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        opacity: 0.7;
+        transition: all 0.3s ease;
+    }
+    
+    .integration-logo:hover {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">Powerful Features for Modern Business Intelligence</h1>
+        <p class="lead mb-4">Discover how InsightIQ transforms your data into actionable insights with AI-powered analytics</p>
+        <a href="{% url 'tenants:register' %}" class="btn btn-light btn-lg me-3">
+            <i class="fas fa-rocket me-2"></i>Start Free Trial
+        </a>
+        <a href="{% url 'core:demo' %}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-play me-2"></i>Watch Demo
+        </a>
+    </div>
+</section>
+
+<!-- Core Features -->
+<section class="feature-section">
+    <div class="container">
+        <h2 class="section-title">Core Features</h2>
+        <div class="row feature-grid">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-chart-line feature-icon text-primary"></i>
+                        <h5 class="card-title">AI-Powered Analytics</h5>
+                        <p class="card-text">Advanced machine learning algorithms automatically detect patterns, trends, and anomalies in your data.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-upload feature-icon text-success"></i>
+                        <h5 class="card-title">Easy Data Upload</h5>
+                        <p class="card-text">Upload CSV, Excel, or connect to databases with our intuitive data import system.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-chart-pie feature-icon text-info"></i>
+                        <h5 class="card-title">Interactive Dashboards</h5>
+                        <p class="card-text">Create beautiful, interactive dashboards with drag-and-drop visualization tools.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-brain feature-icon text-warning"></i>
+                        <h5 class="card-title">Smart Insights</h5>
+                        <p class="card-text">Get automatic insights and recommendations based on your data patterns and business context.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-share-alt feature-icon text-danger"></i>
+                        <h5 class="card-title">Collaboration Tools</h5>
+                        <p class="card-text">Share reports and dashboards with team members and stakeholders seamlessly.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-shield-alt feature-icon text-secondary"></i>
+                        <h5 class="card-title">Enterprise Security</h5>
+                        <p class="card-text">Bank-level security with multi-tenant architecture and role-based access control.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Advanced Features -->
+<section class="demo-section">
+    <div class="container">
+        <h2 class="section-title">Advanced Analytics</h2>
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h3 class="mb-4">Predictive Analytics & Forecasting</h3>
+                <div class="mb-4">
+                    <h5><i class="fas fa-crystal-ball text-primary me-2"></i>Machine Learning Models</h5>
+                    <p>Built-in ML algorithms for classification, regression, and clustering analysis.</p>
+                </div>
+                <div class="mb-4">
+                    <h5><i class="fas fa-chart-area text-success me-2"></i>Time Series Analysis</h5>
+                    <p>Advanced forecasting capabilities with seasonal decomposition and trend analysis.</p>
+                </div>
+                <div class="mb-4">
+                    <h5><i class="fas fa-exclamation-triangle text-warning me-2"></i>Anomaly Detection</h5>
+                    <p>Automatically identify outliers and unusual patterns in your data.</p>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="screenshot-container">
+                    <div class="bg-light p-4 text-center" style="height: 300px; display: flex; align-items: center; justify-content: center;">
+                        <div>
+                            <i class="fas fa-chart-line text-primary" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+                            <h5>Advanced Analytics Dashboard</h5>
+                            <p class="text-muted">Interactive charts and predictive models</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Data Integration -->
+<section class="feature-section">
+    <div class="container">
+        <h2 class="section-title">Data Integration & Connectivity</h2>
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="screenshot-container">
+                    <div class="bg-light p-4 text-center" style="height: 300px; display: flex; align-items: center; justify-content: center;">
+                        <div>
+                            <i class="fas fa-database text-info" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+                            <h5>Data Source Connections</h5>
+                            <p class="text-muted">Connect to multiple data sources</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <h3 class="mb-4">Connect to Any Data Source</h3>
+                <div class="mb-4">
+                    <h5><i class="fas fa-file-csv text-success me-2"></i>File Uploads</h5>
+                    <p>Support for CSV, Excel, JSON, and other common file formats.</p>
+                </div>
+                <div class="mb-4">
+                    <h5><i class="fas fa-database text-info me-2"></i>Database Connections</h5>
+                    <p>Connect to MySQL, PostgreSQL, SQL Server, and other databases.</p>
+                </div>
+                <div class="mb-4">
+                    <h5><i class="fas fa-cloud text-primary me-2"></i>Cloud Services</h5>
+                    <p>Integration with AWS, Google Cloud, Azure, and other cloud platforms.</p>
+                </div>
+                <div class="mb-4">
+                    <h5><i class="fas fa-plug text-warning me-2"></i>API Integration</h5>
+                    <p>Connect to REST APIs and web services for real-time data.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Integration Logos -->
+        <div class="integration-logos">
+            <div class="integration-logo">
+                <i class="fab fa-aws text-warning" style="font-size: 2rem;"></i>
+            </div>
+            <div class="integration-logo">
+                <i class="fab fa-google text-primary" style="font-size: 2rem;"></i>
+            </div>
+            <div class="integration-logo">
+                <i class="fab fa-microsoft text-info" style="font-size: 2rem;"></i>
+            </div>
+            <div class="integration-logo">
+                <i class="fas fa-database text-success" style="font-size: 2rem;"></i>
+            </div>
+            <div class="integration-logo">
+                <i class="fas fa-file-excel text-success" style="font-size: 2rem;"></i>
+            </div>
+            <div class="integration-logo">
+                <i class="fas fa-chart-bar text-primary" style="font-size: 2rem;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Reporting & Export -->
+<section class="demo-section">
+    <div class="container">
+        <h2 class="section-title">Reporting & Export</h2>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-file-pdf feature-icon text-danger"></i>
+                        <h5 class="card-title">PDF Reports</h5>
+                        <p class="card-text">Generate professional PDF reports with custom branding and layouts.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-calendar-alt feature-icon text-info"></i>
+                        <h5 class="card-title">Scheduled Reports</h5>
+                        <p class="card-text">Automate report generation and delivery on custom schedules.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-envelope feature-icon text-success"></i>
+                        <h5 class="card-title">Email Integration</h5>
+                        <p class="card-text">Send reports directly to stakeholders via email with custom messages.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="feature-section">
+    <div class="container text-center">
+        <h2 class="section-title">Ready to Transform Your Data?</h2>
+        <p class="lead mb-4">Join thousands of businesses already using InsightIQ to make data-driven decisions.</p>
+        <a href="{% url 'tenants:register' %}" class="btn btn-primary btn-lg me-3">
+            <i class="fas fa-rocket me-2"></i>Start Free Trial
+        </a>
+        <a href="{% url 'core:public_contact' %}" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-phone me-2"></i>Contact Sales
+        </a>
+    </div>
+</section>
+{% endblock %}

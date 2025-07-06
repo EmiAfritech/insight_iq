@@ -1,0 +1,460 @@
+{% extends 'public_base.html' %}
+{% load static %}
+
+{% block title %}About - InsightIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+    }
+    
+    .section-padding {
+        padding: 80px 0;
+    }
+    
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+        text-align: center;
+        color: #333;
+    }
+    
+    .team-member {
+        transition: all 0.3s ease;
+        text-align: center;
+        padding: 2rem;
+        border-radius: 15px;
+        background: white;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .team-member:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .team-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+    }
+    
+    .stats-section {
+        background: #f8f9fa;
+        padding: 80px 0;
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 1.1rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+    
+    .timeline {
+        position: relative;
+        padding: 2rem 0;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 3rem;
+        width: 50%;
+        padding: 0 2rem;
+    }
+    
+    .timeline-item:nth-child(odd) {
+        left: 0;
+        padding-right: 4rem;
+        text-align: right;
+    }
+    
+    .timeline-item:nth-child(even) {
+        left: 50%;
+        padding-left: 4rem;
+        text-align: left;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        background: #667eea;
+        border-radius: 50%;
+        border: 4px solid white;
+        box-shadow: 0 0 0 4px #667eea;
+    }
+    
+    .timeline-item:nth-child(odd)::before {
+        right: -10px;
+    }
+    
+    .timeline-item:nth-child(even)::before {
+        left: -10px;
+    }
+    
+    .timeline-content {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .timeline-year {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .values-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+    }
+    
+    .value-card {
+        text-align: center;
+        padding: 2rem;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        height: 100%;
+    }
+    
+    .value-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .cta-section {
+        padding: 80px 0;
+        text-align: center;
+    }
+    
+    @media (max-width: 768px) {
+        .timeline::before {
+            left: 30px;
+        }
+        
+        .timeline-item {
+            width: 100%;
+            left: 0 !important;
+            padding-left: 70px !important;
+            padding-right: 0 !important;
+            text-align: left !important;
+        }
+        
+        .timeline-item::before {
+            left: 20px !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">About InsightIQ</h1>
+        <p class="lead mb-4">We're on a mission to democratize data analytics and make AI-powered insights accessible to every business.</p>
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-8">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-number text-white">10K+</div>
+                        <div class="stat-label text-white-50">Happy Customers</div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-number text-white">1M+</div>
+                        <div class="stat-label text-white-50">Datasets Analyzed</div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-number text-white">50+</div>
+                        <div class="stat-label text-white-50">Countries</div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-number text-white">99.9%</div>
+                        <div class="stat-label text-white-50">Uptime</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission Section -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-6 fw-bold mb-4">Our Mission</h2>
+                <p class="lead mb-4">
+                    At InsightIQ, we believe that every business deserves access to powerful data analytics, regardless of their size or technical expertise.
+                </p>
+                <p class="mb-4">
+                    We're building the future of business intelligence by combining cutting-edge AI technology with intuitive design, making it easier than ever to turn raw data into actionable insights.
+                </p>
+                <p class="mb-4">
+                    Our platform empowers organizations to make data-driven decisions faster, identify opportunities sooner, and stay ahead of the competition in today's rapidly evolving marketplace.
+                </p>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <div class="bg-light p-5 rounded-3">
+                        <i class="fas fa-lightbulb text-primary mb-3" style="font-size: 5rem;"></i>
+                        <h4>Transforming Data into Insights</h4>
+                        <p class="text-muted">AI-powered analytics for everyone</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Values Section -->
+<section class="values-section">
+    <div class="container">
+        <h2 class="section-title text-white">Our Values</h2>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="value-card">
+                    <i class="fas fa-users value-icon"></i>
+                    <h5>Customer-Centric</h5>
+                    <p>We put our customers at the heart of everything we do, constantly listening to feedback and evolving our platform to meet their needs.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="value-card">
+                    <i class="fas fa-rocket value-icon"></i>
+                    <h5>Innovation</h5>
+                    <p>We're constantly pushing the boundaries of what's possible in business intelligence, leveraging the latest AI and machine learning technologies.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="value-card">
+                    <i class="fas fa-shield-alt value-icon"></i>
+                    <h5>Security & Privacy</h5>
+                    <p>We take data security seriously, implementing best-in-class security measures to protect our customers' valuable information.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="section-padding">
+    <div class="container">
+        <h2 class="section-title">Meet Our Team</h2>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="team-member">
+                    <div class="team-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h5>Sarah Johnson</h5>
+                    <p class="text-muted mb-3">CEO & Founder</p>
+                    <p>Former VP of Analytics at Fortune 500 company with 15+ years of experience in data science and business intelligence.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-muted me-2"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-muted me-2"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="team-member">
+                    <div class="team-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h5>Michael Chen</h5>
+                    <p class="text-muted mb-3">CTO & Co-Founder</p>
+                    <p>Former Principal Engineer at Google with expertise in AI/ML systems and scalable cloud architecture.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-muted me-2"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-muted me-2"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="team-member">
+                    <div class="team-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h5>Emily Rodriguez</h5>
+                    <p class="text-muted mb-3">Head of Product</p>
+                    <p>Product leader with 12+ years of experience building user-centric analytics tools at leading tech companies.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-muted me-2"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-muted me-2"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Company Timeline -->
+<section class="stats-section">
+    <div class="container">
+        <h2 class="section-title">Our Journey</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2020</div>
+                    <h5>Company Founded</h5>
+                    <p>InsightIQ was founded with a vision to democratize business intelligence and make advanced analytics accessible to all businesses.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2021</div>
+                    <h5>First Product Launch</h5>
+                    <p>Launched our MVP with core analytics features and secured our first 100 customers within 6 months.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2022</div>
+                    <h5>AI Integration</h5>
+                    <p>Integrated advanced AI and machine learning capabilities, introducing automated insights and predictive analytics.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2023</div>
+                    <h5>Global Expansion</h5>
+                    <p>Expanded to serve customers in 50+ countries and reached 10,000+ active users worldwide.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2024</div>
+                    <h5>Enterprise Solutions</h5>
+                    <p>Launched enterprise-grade features including advanced security, compliance tools, and white-label solutions.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2025</div>
+                    <h5>Next Generation Platform</h5>
+                    <p>Unveiling our next-generation platform with enhanced AI capabilities and real-time collaborative analytics.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Technology Section -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <div class="bg-light p-5 rounded-3">
+                        <i class="fas fa-cogs text-primary mb-3" style="font-size: 5rem;"></i>
+                        <h4>Built with Modern Technology</h4>
+                        <p class="text-muted">Scalable, secure, and reliable</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <h2 class="display-6 fw-bold mb-4">Technology Stack</h2>
+                <p class="lead mb-4">
+                    Our platform is built on modern, scalable technology that ensures reliability, security, and performance.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-cloud text-primary me-2"></i>
+                            <strong>Cloud-First Architecture</strong>
+                        </div>
+                        <div class="mb-3">
+                            <i class="fas fa-brain text-primary me-2"></i>
+                            <strong>Advanced AI/ML</strong>
+                        </div>
+                        <div class="mb-3">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <strong>Enterprise Security</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                            <strong>Real-Time Processing</strong>
+                        </div>
+                        <div class="mb-3">
+                            <i class="fas fa-mobile-alt text-primary me-2"></i>
+                            <strong>Mobile-First Design</strong>
+                        </div>
+                        <div class="mb-3">
+                            <i class="fas fa-plug text-primary me-2"></i>
+                            <strong>API-First Platform</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h2 class="display-6 fw-bold mb-4">Ready to Transform Your Business?</h2>
+                <p class="lead mb-4">Join thousands of companies already using InsightIQ to make better data-driven decisions.</p>
+                <a href="{% url 'tenants:register' %}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-rocket me-2"></i>Start Free Trial
+                </a>
+                <a href="{% url 'core:public_contact' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-envelope me-2"></i>Contact Us
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

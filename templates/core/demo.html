@@ -1,0 +1,633 @@
+{% extends 'public_base.html' %}
+{% load static %}
+
+{% block title %}Demo - InsightIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+    
+    .demo-section {
+        padding: 80px 0;
+    }
+    
+    .demo-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-bottom: 4rem;
+    }
+    
+    .demo-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .demo-content {
+        padding: 3rem;
+    }
+    
+    .demo-video {
+        width: 100%;
+        height: 400px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .demo-video:hover {
+        border-color: #667eea;
+        cursor: pointer;
+    }
+    
+    .demo-video i {
+        font-size: 4rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-demo {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-demo:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+    
+    .demo-steps {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+    
+    .step-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        height: 100%;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .step-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .step-number {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0 auto 1rem;
+    }
+    
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+        text-align: center;
+        color: #333;
+    }
+    
+    .interactive-demo {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .demo-tabs {
+        border-bottom: 2px solid #e9ecef;
+        margin-bottom: 2rem;
+    }
+    
+    .demo-tab {
+        padding: 1rem 2rem;
+        border: none;
+        background: none;
+        color: #6c757d;
+        font-weight: 600;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .demo-tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+    }
+    
+    .demo-tab:hover {
+        color: #667eea;
+    }
+    
+    .demo-tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .demo-tab-content.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .demo-screenshot {
+        width: 100%;
+        height: 300px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        border: 1px solid #e9ecef;
+    }
+    
+    .cta-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+    
+    .testimonial-section {
+        padding: 80px 0;
+    }
+    
+    .testimonial-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+    
+    .testimonial-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+        color: white;
+    }
+    
+    .stars {
+        color: #ffc107;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">See InsightIQ in Action</h1>
+        <p class="lead mb-4">Watch our interactive demo to see how InsightIQ can transform your data into actionable insights.</p>
+    </div>
+</section>
+
+<!-- Main Demo Video -->
+<section class="demo-section">
+    <div class="container">
+        <div class="demo-container">
+            <div class="demo-header">
+                <h2 class="mb-3">Complete Platform Overview</h2>
+                <p class="mb-0">5-minute walkthrough of InsightIQ's key features</p>
+            </div>
+            <div class="demo-content">
+                <div class="demo-video" onclick="playMainDemo()">
+                    <div class="text-center">
+                        <i class="fas fa-play-circle"></i>
+                        <h5 class="mt-2">Play Demo Video</h5>
+                        <p class="text-muted mb-0">5:30 minutes</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <h4 class="mb-3">What you'll see:</h4>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <i class="fas fa-upload text-primary mb-2" style="font-size: 2rem;"></i>
+                            <h6>Data Upload</h6>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <i class="fas fa-chart-line text-success mb-2" style="font-size: 2rem;"></i>
+                            <h6>Auto Analysis</h6>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <i class="fas fa-brain text-warning mb-2" style="font-size: 2rem;"></i>
+                            <h6>AI Insights</h6>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <i class="fas fa-share-alt text-info mb-2" style="font-size: 2rem;"></i>
+                            <h6>Sharing</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Interactive Demo -->
+<section class="demo-section">
+    <div class="container">
+        <h2 class="section-title">Interactive Feature Demos</h2>
+        <div class="interactive-demo">
+            <div class="demo-tabs">
+                <button class="demo-tab active" onclick="showTab('upload')">Data Upload</button>
+                <button class="demo-tab" onclick="showTab('analysis')">Analysis</button>
+                <button class="demo-tab" onclick="showTab('visualization')">Visualization</button>
+                <button class="demo-tab" onclick="showTab('insights')">AI Insights</button>
+                <button class="demo-tab" onclick="showTab('sharing')">Sharing</button>
+            </div>
+            
+            <div id="upload" class="demo-tab-content active">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h4 class="mb-3">Easy Data Upload</h4>
+                        <p class="mb-4">Upload your data in seconds with our intuitive drag-and-drop interface. Support for CSV, Excel, JSON, and direct database connections.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Drag & drop file upload</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Automatic data type detection</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Data validation and cleaning</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Preview before processing</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="demo-screenshot">
+                            <div class="text-center">
+                                <i class="fas fa-upload text-primary mb-3" style="font-size: 3rem;"></i>
+                                <h5>Data Upload Interface</h5>
+                                <p class="text-muted">Interactive file upload with preview</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="analysis" class="demo-tab-content">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <div class="demo-screenshot">
+                            <div class="text-center">
+                                <i class="fas fa-chart-line text-success mb-3" style="font-size: 3rem;"></i>
+                                <h5>Analysis Dashboard</h5>
+                                <p class="text-muted">Automated statistical analysis</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <h4 class="mb-3">Automated Analysis</h4>
+                        <p class="mb-4">Our AI automatically analyzes your data to identify patterns, trends, and anomalies. Get instant insights without manual configuration.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Statistical summaries</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Correlation analysis</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Trend detection</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Outlier identification</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="visualization" class="demo-tab-content">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h4 class="mb-3">Beautiful Visualizations</h4>
+                        <p class="mb-4">Create stunning charts and graphs with our drag-and-drop visualization builder. Choose from dozens of chart types and customization options.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>20+ chart types</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Interactive dashboards</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Custom themes & colors</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Real-time updates</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="demo-screenshot">
+                            <div class="text-center">
+                                <i class="fas fa-chart-pie text-info mb-3" style="font-size: 3rem;"></i>
+                                <h5>Visualization Builder</h5>
+                                <p class="text-muted">Drag & drop chart creation</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="insights" class="demo-tab-content">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <div class="demo-screenshot">
+                            <div class="text-center">
+                                <i class="fas fa-brain text-warning mb-3" style="font-size: 3rem;"></i>
+                                <h5>AI Insights Engine</h5>
+                                <p class="text-muted">Automated insight generation</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <h4 class="mb-3">AI-Powered Insights</h4>
+                        <p class="mb-4">Our advanced AI engine automatically generates insights and recommendations based on your data patterns and business context.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Automatic pattern detection</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Predictive analytics</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Anomaly alerts</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Business recommendations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="sharing" class="demo-tab-content">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h4 class="mb-3">Easy Sharing & Collaboration</h4>
+                        <p class="mb-4">Share your insights with team members and stakeholders. Export reports, embed dashboards, or collaborate in real-time.</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>PDF report generation</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Dashboard embedding</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Team collaboration</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Scheduled reports</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="demo-screenshot">
+                            <div class="text-center">
+                                <i class="fas fa-share-alt text-danger mb-3" style="font-size: 3rem;"></i>
+                                <h5>Sharing Options</h5>
+                                <p class="text-muted">Multiple sharing and export formats</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Steps -->
+<section class="demo-steps">
+    <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h5>Upload Data</h5>
+                    <p>Upload your data files or connect to your existing databases and data sources.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h5>Auto Analysis</h5>
+                    <p>Our AI automatically analyzes your data to identify patterns, trends, and insights.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h5>Create Visuals</h5>
+                    <p>Build beautiful charts and dashboards with our drag-and-drop interface.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h5>Share & Collaborate</h5>
+                    <p>Share insights with your team and stakeholders through reports and dashboards.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonial-section">
+    <div class="container">
+        <h2 class="section-title">What Our Users Say</h2>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="mb-3">"InsightIQ has revolutionized how we analyze our data. The AI insights are incredibly accurate and have helped us identify opportunities we never saw before."</p>
+                    <h6>Sarah Chen</h6>
+                    <small class="text-muted">VP of Analytics, TechCorp</small>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="mb-3">"The platform is incredibly user-friendly. We went from manual Excel analysis to automated insights in just one week."</p>
+                    <h6>Mike Johnson</h6>
+                    <small class="text-muted">Data Manager, RetailPlus</small>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="mb-3">"The ROI has been incredible. We've saved hundreds of hours of manual work and made better decisions faster."</p>
+                    <h6>Lisa Rodriguez</h6>
+                    <small class="text-muted">CEO, GrowthCo</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <h2 class="display-5 fw-bold mb-4">Ready to Get Started?</h2>
+        <p class="lead mb-4">Join thousands of companies already using InsightIQ to transform their data into actionable insights.</p>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <a href="{% url 'tenants:register' %}" class="btn btn-light btn-lg me-3">
+                    <i class="fas fa-rocket me-2"></i>Start Free Trial
+                </a>
+                <a href="{% url 'core:public_contact' %}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-calendar me-2"></i>Schedule Demo
+                </a>
+            </div>
+        </div>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <i class="fas fa-check-circle mb-2" style="font-size: 1.5rem;"></i>
+                        <p class="mb-0">Free 14-day trial</p>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="fas fa-credit-card mb-2" style="font-size: 1.5rem;"></i>
+                        <p class="mb-0">No credit card required</p>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="fas fa-times-circle mb-2" style="font-size: 1.5rem;"></i>
+                        <p class="mb-0">Cancel anytime</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.demo-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.demo-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName).classList.add('active');
+    
+    // Add active class to clicked tab
+    event.target.classList.add('active');
+}
+
+function playMainDemo() {
+    // This would typically open a modal with the actual demo video
+    // For now, we'll show a placeholder
+    const modal = document.createElement('div');
+    modal.className = 'modal fade show';
+    modal.style.display = 'block';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">InsightIQ Demo</h5>
+                    <button type="button" class="btn-close" onclick="closeModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="ratio ratio-16x9">
+                        <div class="bg-light d-flex align-items-center justify-content-center">
+                            <div class="text-center">
+                                <i class="fas fa-play-circle text-primary mb-3" style="font-size: 4rem;"></i>
+                                <h4>Demo Video</h4>
+                                <p class="text-muted">This would be the actual demo video</p>
+                                <button class="btn btn-primary" onclick="closeModal()">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.id = 'demoModal';
+}
+
+function closeModal() {
+    const modal = document.getElementById('demoModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Auto-play demo tabs
+let currentTabIndex = 0;
+const tabs = ['upload', 'analysis', 'visualization', 'insights', 'sharing'];
+
+function autoRotateTabs() {
+    setInterval(() => {
+        currentTabIndex = (currentTabIndex + 1) % tabs.length;
+        const tabName = tabs[currentTabIndex];
+        
+        // Hide all tab contents
+        document.querySelectorAll('.demo-tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.demo-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected tab content
+        document.getElementById(tabName).classList.add('active');
+        
+        // Add active class to corresponding tab
+        document.querySelectorAll('.demo-tab')[currentTabIndex].classList.add('active');
+    }, 5000); // Change tab every 5 seconds
+}
+
+// Start auto-rotation when page loads
+// document.addEventListener('DOMContentLoaded', autoRotateTabs);
+</script>
+{% endblock %}
