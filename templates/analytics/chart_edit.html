@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Chart - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-edit me-2"></i>Edit Chart</h1>
+                <a href="{% url 'analytics:chart_detail' chart.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Chart
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Chart Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" id="chart-form">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.name.id_for_label }}" class="form-label">Chart Name</label>
+                                            {{ form.name }}
+                                            {% if form.name.errors %}
+                                                <div class="text-danger">{{ form.name.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.chart_type.id_for_label }}" class="form-label">Chart Type</label>
+                                            {{ form.chart_type }}
+                                            {% if form.chart_type.errors %}
+                                                <div class="text-danger">{{ form.chart_type.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.width.id_for_label }}" class="form-label">Width (px)</label>
+                                            {{ form.width }}
+                                            {% if form.width.errors %}
+                                                <div class="text-danger">{{ form.width.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.height.id_for_label }}" class="form-label">Height (px)</label>
+                                            {{ form.height }}
+                                            {% if form.height.errors %}
+                                                <div class="text-danger">{{ form.height.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ form.is_interactive }}
+                                        <label class="form-check-label" for="{{ form.is_interactive.id_for_label }}">
+                                            Make chart interactive
+                                        </label>
+                                    </div>
+                                    {% if form.is_interactive.errors %}
+                                        <div class="text-danger">{{ form.is_interactive.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">Chart Configuration</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="chart-config-editor" class="form-label">Configuration JSON</label>
+                                            <textarea id="chart-config-editor" class="form-control font-monospace" rows="10" name="configuration">{{ chart.configuration|safe }}</textarea>
+                                            <div class="form-text">Advanced configuration options in JSON format</div>
+                                        </div>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-outline-info btn-sm" onclick="formatConfig()">
+                                                <i class="fas fa-magic me-1"></i>Format JSON
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="validateConfig()">
+                                                <i class="fas fa-check-circle me-1"></i>Validate JSON
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetConfig()">
+                                                <i class="fas fa-undo me-1"></i>Reset to Default
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save Changes
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success" onclick="previewChart()">
+                                        <i class="fas fa-eye me-2"></i>Preview Changes
+                                    </button>
+                                    <a href="{% url 'analytics:chart_detail' chart.pk %}" class="btn btn-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Chart Preview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="preview-container" style="height: 300px;">
+                                <canvas id="preview-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Chart Types</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6 mb-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="setChartType('line')">
+                                        <i class="fas fa-chart-line me-1"></i>Line
+                                    </button>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="setChartType('bar')">
+                                        <i class="fas fa-chart-bar me-1"></i>Bar
+                                    </button>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="setChartType('pie')">
+                                        <i class="fas fa-chart-pie me-1"></i>Pie
+                                    </button>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="setChartType('scatter')">
+                                        <i class="fas fa-braille me-1"></i>Scatter
+                                    </button>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="setChartType('area')">
+                                        <i class="fas fa-chart-area me-1"></i>Area
+                                    </button>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="setChartType('histogram')">
+                                        <i class="fas fa-chart-column me-1"></i>Histogram
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Data Source</h6>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-5">Analysis:</dt>
+                                <dd class="col-sm-7">{{ chart.analysis.name }}</dd>
+                                
+                                <dt class="col-sm-5">Dataset:</dt>
+                                <dd class="col-sm-7">{{ chart.analysis.dataset.name }}</dd>
+                                
+                                <dt class="col-sm-5">Type:</dt>
+                                <dd class="col-sm-7">{{ chart.analysis.get_analysis_type_display }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let previewChart;
+let chartData = JSON.parse('{{ chart.data|escapejs }}');
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderPreview();
+    
+    // Update preview when chart type changes
+    document.getElementById('{{ form.chart_type.id_for_label }}').addEventListener('change', function() {
+        renderPreview();
+    });
+});
+
+function renderPreview() {
+    const ctx = document.getElementById('preview-chart').getContext('2d');
+    const chartType = document.getElementById('{{ form.chart_type.id_for_label }}').value;
+    
+    if (previewChart) {
+        previewChart.destroy();
+    }
+    
+    previewChart = new Chart(ctx, {
+        type: chartType,
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Preview'
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+}
+
+function setChartType(type) {
+    document.getElementById('{{ form.chart_type.id_for_label }}').value = type;
+    renderPreview();
+}
+
+function formatConfig() {
+    const editor = document.getElementById('chart-config-editor');
+    try {
+        const config = JSON.parse(editor.value);
+        editor.value = JSON.stringify(config, null, 2);
+        showAlert('Configuration formatted successfully!', 'success');
+    } catch (e) {
+        showAlert('Invalid JSON: ' + e.message, 'danger');
+    }
+}
+
+function validateConfig() {
+    const editor = document.getElementById('chart-config-editor');
+    try {
+        JSON.parse(editor.value);
+        showAlert('Configuration is valid JSON!', 'success');
+    } catch (e) {
+        showAlert('Invalid JSON: ' + e.message, 'danger');
+    }
+}
+
+function resetConfig() {
+    if (confirm('Are you sure you want to reset the configuration to default?')) {
+        document.getElementById('chart-config-editor').value = '{}';
+        showAlert('Configuration reset to default', 'info');
+    }
+}
+
+function previewChart() {
+    const formData = new FormData(document.getElementById('chart-form'));
+    
+    fetch(`{% url 'analytics:chart_detail' chart.pk %}`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            renderPreview();
+            showAlert('Preview updated successfully!', 'success');
+        } else {
+            showAlert('Error updating preview: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Error: ' + error.message, 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

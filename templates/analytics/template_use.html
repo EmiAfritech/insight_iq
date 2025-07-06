@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Use Template - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-play me-2"></i>Use Analysis Template</h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'analytics:template_detail' template.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Template
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Create Analysis from Template</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" id="template-form">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="mb-4">
+                                    <h6 class="text-muted">Template Information</h6>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-auto">
+                                                    <i class="fas fa-clipboard-list text-primary fs-3"></i>
+                                                </div>
+                                                <div class="col">
+                                                    <h6 class="mb-1">{{ template.name }}</h6>
+                                                    <p class="text-muted mb-1">{{ template.description }}</p>
+                                                    <span class="badge bg-primary">{{ template.get_analysis_type_display }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.dataset.id_for_label }}" class="form-label">Select Dataset</label>
+                                    {{ form.dataset }}
+                                    <div class="form-text">Choose the dataset you want to analyze using this template</div>
+                                    {% if form.dataset.errors %}
+                                        <div class="text-danger">{{ form.dataset.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">Analysis Name</label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">{{ form.name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3" id="column-selection" style="display: none;">
+                                    <label class="form-label">Select Columns</label>
+                                    <div class="row" id="columns-container">
+                                        <!-- Columns will be loaded dynamically -->
+                                    </div>
+                                    <div class="form-text">Select the columns you want to include in the analysis</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Template Configuration</label>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <pre class="bg-light p-3 rounded"><code>{{ template.configuration|safe }}</code></pre>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="customize-config" name="customize_config">
+                                                <label class="form-check-label" for="customize-config">
+                                                    Customize configuration
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3" id="custom-config" style="display: none;">
+                                    <label for="configuration" class="form-label">Custom Configuration</label>
+                                    <textarea id="configuration" name="configuration" class="form-control font-monospace" rows="6">{{ template.configuration|safe }}</textarea>
+                                    <div class="form-text">Advanced configuration in JSON format</div>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Create Analysis
+                                    </button>
+                                    <button type="submit" name="action" value="create_and_run" class="btn btn-success">
+                                        <i class="fas fa-play me-2"></i>Create & Run Analysis
+                                    </button>
+                                    <a href="{% url 'analytics:template_detail' template.pk %}" class="btn btn-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Template Preview</h6>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-5">Type:</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-primary">{{ template.get_analysis_type_display }}</span>
+                                </dd>
+                                
+                                <dt class="col-sm-5">Usage Count:</dt>
+                                <dd class="col-sm-7">{{ template.usage_count }}</dd>
+                                
+                                <dt class="col-sm-5">Created:</dt>
+                                <dd class="col-sm-7">{{ template.created_at|date:"M d, Y" }}</dd>
+                                
+                                <dt class="col-sm-5">Created by:</dt>
+                                <dd class="col-sm-7">{{ template.created_by.get_full_name|default:template.created_by.username }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Available Datasets</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                {% for dataset in available_datasets %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong>{{ dataset.name }}</strong>
+                                            <div class="text-muted small">{{ dataset.total_rows }} rows, {{ dataset.total_columns }} columns</div>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="selectDataset('{{ dataset.pk }}')">
+                                            Select
+                                        </button>
+                                    </div>
+                                {% empty %}
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-database fs-3"></i>
+                                        <p class="mt-2">No datasets available</p>
+                                        <a href="{% url 'analytics:dataset_upload' %}" class="btn btn-sm btn-primary">
+                                            Upload Dataset
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Analysis Steps</h6>
+                        </div>
+                        <div class="card-body">
+                            <ol class="list-unstyled">
+                                <li class="mb-2">
+                                    <span class="badge badge-step bg-primary">1</span>
+                                    Select a dataset
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge badge-step bg-secondary">2</span>
+                                    Choose analysis name
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge badge-step bg-secondary">3</span>
+                                    Select columns to analyze
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge badge-step bg-secondary">4</span>
+                                    Customize configuration (optional)
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge badge-step bg-secondary">5</span>
+                                    Create and run analysis
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentStep = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle dataset selection change
+    document.getElementById('{{ form.dataset.id_for_label }}').addEventListener('change', function() {
+        const datasetId = this.value;
+        if (datasetId) {
+            loadDatasetColumns(datasetId);
+            updateStep(2);
+        }
+    });
+    
+    // Handle customize config checkbox
+    document.getElementById('customize-config').addEventListener('change', function() {
+        const customConfig = document.getElementById('custom-config');
+        if (this.checked) {
+            customConfig.style.display = 'block';
+        } else {
+            customConfig.style.display = 'none';
+        }
+    });
+    
+    // Pre-fill analysis name based on template
+    const analysisNameField = document.getElementById('{{ form.name.id_for_label }}');
+    if (!analysisNameField.value) {
+        analysisNameField.value = `{{ template.name }} Analysis`;
+    }
+});
+
+function loadDatasetColumns(datasetId) {
+    fetch(`{% url 'analytics:api_dataset_columns' 'DATASET_ID' %}`.replace('DATASET_ID', datasetId))
+        .then(response => response.json())
+        .then(data => {
+            populateColumnSelection(data.columns);
+            document.getElementById('column-selection').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error loading columns:', error);
+        });
+}
+
+function populateColumnSelection(columns) {
+    const container = document.getElementById('columns-container');
+    container.innerHTML = '';
+    
+    columns.forEach(column => {
+        const colDiv = document.createElement('div');
+        colDiv.className = 'col-md-6 mb-2';
+        colDiv.innerHTML = `
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" 
+                       id="col_${column.name}" 
+                       name="selected_columns" 
+                       value="${column.name}"
+                       checked>
+                <label class="form-check-label" for="col_${column.name}">
+                    ${column.name}
+                    <span class="badge bg-secondary ms-1">${column.type}</span>
+                </label>
+            </div>
+        `;
+        container.appendChild(colDiv);
+    });
+}
+
+function selectDataset(datasetId) {
+    const datasetSelect = document.getElementById('{{ form.dataset.id_for_label }}');
+    datasetSelect.value = datasetId;
+    datasetSelect.dispatchEvent(new Event('change'));
+}
+
+function updateStep(step) {
+    // Update step indicators
+    document.querySelectorAll('.badge-step').forEach((badge, index) => {
+        if (index + 1 <= step) {
+            badge.className = 'badge badge-step bg-primary';
+        } else {
+            badge.className = 'badge badge-step bg-secondary';
+        }
+    });
+    currentStep = step;
+}
+
+// Form validation
+document.getElementById('template-form').addEventListener('submit', function(e) {
+    const dataset = document.getElementById('{{ form.dataset.id_for_label }}').value;
+    const name = document.getElementById('{{ form.name.id_for_label }}').value;
+    
+    if (!dataset) {
+        e.preventDefault();
+        alert('Please select a dataset');
+        return;
+    }
+    
+    if (!name.trim()) {
+        e.preventDefault();
+        alert('Please enter an analysis name');
+        return;
+    }
+    
+    const selectedColumns = document.querySelectorAll('input[name="selected_columns"]:checked');
+    if (selectedColumns.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one column to analyze');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+});
+</script>
+
+<style>
+.badge-step {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+</style>
+{% endblock %}

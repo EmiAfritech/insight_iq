@@ -1,53 +1,353 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Reports - InsightIQ{% endblock %}
-
-{% block breadcrumb_items %}
-    <li class="breadcrumb-item active">Reports</li>
-{% endblock %}
+{% block title %}Report List - InsightIQ{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1 class="page-title">
-        <i class="fas fa-file-alt me-2"></i>Reports
-    </h1>
-    <div class="action-buttons">
-        <a href="{% url 'reports:template_list' %}" class="btn btn-outline-primary">
-            <i class="fas fa-template me-2"></i>Templates
-        </a>
-        <a href="{% url 'reports:report_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>New Report
-        </a>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-file-alt me-2"></i>Reports</h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'reports:report_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Report
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog me-2"></i>Options
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'reports:report_templates' %}">Browse Templates</a></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:report_schedule' %}">Schedule Report</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:report_settings' %}">Report Settings</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <form method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control me-2" 
+                               placeholder="Search reports..." value="{{ search }}">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end align-items-center">
+                        <div class="me-3">
+                            <select class="form-select" onchange="filterReports(this.value)">
+                                <option value="">All Reports</option>
+                                <option value="completed">Completed</option>
+                                <option value="generating">Generating</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+                        <div class="me-3">
+                            <select class="form-select" onchange="filterByType(this.value)">
+                                <option value="">All Types</option>
+                                <option value="financial">Financial</option>
+                                <option value="sales">Sales</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="operations">Operations</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary active" onclick="toggleView('grid')">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="toggleView('list')">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Grid -->
+            <div id="reports-grid" class="row">
+                {% for report in reports %}
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card report-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">{{ report.title }}</h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-link btn-sm text-muted" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{% url 'reports:report_detail' report.pk %}">View Report</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'reports:report_edit' report.pk %}">Edit</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'reports:report_duplicate' report.pk %}">Duplicate</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{% url 'reports:report_download' report.pk %}">Download PDF</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'reports:report_share' report.pk %}">Share</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="{% url 'reports:report_delete' report.pk %}">Delete</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <p class="card-text text-muted">{{ report.description|truncatewords:15 }}</p>
+                            
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                {% if report.status == 'completed' %}
+                                    <span class="badge bg-success">{{ report.get_status_display }}</span>
+                                {% elif report.status == 'generating' %}
+                                    <span class="badge bg-warning">{{ report.get_status_display }}</span>
+                                {% elif report.status == 'failed' %}
+                                    <span class="badge bg-danger">{{ report.get_status_display }}</span>
+                                {% elif report.status == 'scheduled' %}
+                                    <span class="badge bg-info">{{ report.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ report.get_status_display }}</span>
+                                {% endif %}
+                                
+                                {% if report.template %}
+                                    <span class="badge bg-primary">{{ report.template.get_template_type_display }}</span>
+                                {% endif %}
+                                
+                                {% if report.is_scheduled %}
+                                    <span class="badge bg-info">Scheduled</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>{{ report.created_by.get_full_name|default:report.created_by.username }}
+                                </small>
+                                <small class="text-muted">
+                                    {{ report.created_at|date:"M d, Y" }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-2">
+                                {% if report.status == 'completed' %}
+                                    <a href="{% url 'reports:report_detail' report.pk %}" class="btn btn-primary btn-sm flex-fill">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    <a href="{% url 'reports:report_download' report.pk %}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-download me-1"></i>Download
+                                    </a>
+                                {% elif report.status == 'generating' %}
+                                    <button class="btn btn-warning btn-sm flex-fill" disabled>
+                                        <i class="fas fa-spinner fa-spin me-1"></i>Generating...
+                                    </button>
+                                {% elif report.status == 'failed' %}
+                                    <a href="{% url 'reports:report_retry' report.pk %}" class="btn btn-outline-danger btn-sm flex-fill">
+                                        <i class="fas fa-redo me-1"></i>Retry
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'reports:report_detail' report.pk %}" class="btn btn-outline-primary btn-sm flex-fill">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-alt text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="mt-3">No Reports Found</h5>
+                            <p class="text-muted">Create your first report to get started with automated reporting.</p>
+                            <a href="{% url 'reports:report_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Reports List View -->
+            <div id="reports-list" class="d-none">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Created By</th>
+                                        <th>Created</th>
+                                        <th>Generated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for report in reports %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ report.title }}</strong>
+                                            {% if report.is_scheduled %}
+                                                <span class="badge bg-info ms-2">Scheduled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if report.template %}
+                                                <span class="badge bg-primary">{{ report.template.get_template_type_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Custom</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if report.status == 'completed' %}
+                                                <span class="badge bg-success">{{ report.get_status_display }}</span>
+                                            {% elif report.status == 'generating' %}
+                                                <span class="badge bg-warning">{{ report.get_status_display }}</span>
+                                            {% elif report.status == 'failed' %}
+                                                <span class="badge bg-danger">{{ report.get_status_display }}</span>
+                                            {% elif report.status == 'scheduled' %}
+                                                <span class="badge bg-info">{{ report.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ report.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ report.created_by.get_full_name|default:report.created_by.username }}</td>
+                                        <td>{{ report.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if report.generated_at %}
+                                                {{ report.generated_at|date:"M d, Y" }}
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                {% if report.status == 'completed' %}
+                                                    <a href="{% url 'reports:report_detail' report.pk %}" class="btn btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'reports:report_download' report.pk %}" class="btn btn-outline-secondary">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                {% elif report.status == 'failed' %}
+                                                    <a href="{% url 'reports:report_retry' report.pk %}" class="btn btn-outline-danger">
+                                                        <i class="fas fa-redo"></i>
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'reports:report_detail' report.pk %}" class="btn btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                {% endif %}
+                                                <a href="{% url 'reports:report_edit' report.pk %}" class="btn btn-outline-warning">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'reports:report_delete' report.pk %}" class="btn btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
     </div>
 </div>
 
-<!-- Search and Filter Form -->
-<div class="search-form">
-    <form method="get" class="row g-3">
-        <div class="col-md-4">
-            <input type="text" name="search" class="form-control" placeholder="Search reports..." value="{{ search_query }}">
-        </div>
-        <div class="col-md-3">
-            <select name="status" class="form-select">
-                <option value="">All Status</option>
-                {% for key, value in status_choices %}
-                    <option value="{{ key }}" {% if key == current_status %}selected{% endif %}>{{ value }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select name="format" class="form-select">
-                <option value="">All Formats</option>
-                {% for key, value in format_choices %}
-                    <option value="{{ key }}" {% if key == current_format %}selected{% endif %}>{{ value }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">
-                <i class="fas fa-search me-2"></i>Search
-            </button>
-        </div>
+<script>
+function toggleView(view) {
+    const gridContainer = document.getElementById('reports-grid');
+    const listContainer = document.getElementById('reports-list');
+    const gridBtn = document.querySelector('[onclick="toggleView(\'grid\')"]');
+    const listBtn = document.querySelector('[onclick="toggleView(\'list\')"]');
+    
+    if (view === 'grid') {
+        gridContainer.classList.remove('d-none');
+        listContainer.classList.add('d-none');
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        gridContainer.classList.add('d-none');
+        listContainer.classList.remove('d-none');
+        gridBtn.classList.remove('active');
+        listBtn.classList.add('active');
+    }
+}
+
+function filterReports(status) {
+    const url = new URL(window.location.href);
+    if (status) {
+        url.searchParams.set('status', status);
+    } else {
+        url.searchParams.delete('status');
+    }
+    window.location.href = url.toString();
+}
+
+function filterByType(type) {
+    const url = new URL(window.location.href);
+    if (type) {
+        url.searchParams.set('type', type);
+    } else {
+        url.searchParams.delete('type');
+    }
+    window.location.href = url.toString();
+}
+
+// Auto-refresh for reports with "generating" status
+function autoRefresh() {
+    const generatingReports = document.querySelectorAll('.badge.bg-warning');
+    if (generatingReports.length > 0) {
+        setTimeout(() => {
+            location.reload();
+        }, 10000); // Refresh every 10 seconds
+    }
+}
+
+document.addEventListener('DOMContentLoaded', autoRefresh);
+</script>
+{% endblock %}
     </form>
 </div>
 

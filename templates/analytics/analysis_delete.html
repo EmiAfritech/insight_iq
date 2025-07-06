@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Analysis - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-trash me-2"></i>Delete Analysis</h1>
+                <a href="{% url 'analytics:analysis_detail' analysis.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Analysis
+                </a>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-danger">
+                                <h5 class="alert-heading">Warning!</h5>
+                                <p>You are about to delete the analysis <strong>"{{ analysis.name }}"</strong>. This action cannot be undone.</p>
+                                <hr>
+                                <p class="mb-0">This will also delete:</p>
+                                <ul>
+                                    <li>All charts generated from this analysis ({{ analysis.chart_objects.count }})</li>
+                                    <li>All insights derived from this analysis ({{ analysis.insight_objects.count }})</li>
+                                    <li>All analysis results and configurations</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Analysis Information</h6>
+                                    <dl class="row">
+                                        <dt class="col-sm-3">Name:</dt>
+                                        <dd class="col-sm-9">{{ analysis.name }}</dd>
+                                        
+                                        <dt class="col-sm-3">Description:</dt>
+                                        <dd class="col-sm-9">{{ analysis.description|default:"No description" }}</dd>
+                                        
+                                        <dt class="col-sm-3">Dataset:</dt>
+                                        <dd class="col-sm-9">{{ analysis.dataset.name }}</dd>
+                                        
+                                        <dt class="col-sm-3">Type:</dt>
+                                        <dd class="col-sm-9">{{ analysis.get_analysis_type_display }}</dd>
+                                        
+                                        <dt class="col-sm-3">Status:</dt>
+                                        <dd class="col-sm-9">
+                                            {% if analysis.status == 'completed' %}
+                                                <span class="badge bg-success">{{ analysis.get_status_display }}</span>
+                                            {% elif analysis.status == 'running' %}
+                                                <span class="badge bg-warning">{{ analysis.get_status_display }}</span>
+                                            {% elif analysis.status == 'failed' %}
+                                                <span class="badge bg-danger">{{ analysis.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ analysis.get_status_display }}</span>
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        <dt class="col-sm-3">Created:</dt>
+                                        <dd class="col-sm-9">{{ analysis.created_at|date:"M d, Y H:i" }}</dd>
+                                        
+                                        <dt class="col-sm-3">Created by:</dt>
+                                        <dd class="col-sm-9">{{ analysis.created_by.get_full_name|default:analysis.created_by.username }}</dd>
+                                        
+                                        {% if analysis.execution_time %}
+                                            <dt class="col-sm-3">Runtime:</dt>
+                                            <dd class="col-sm-9">{{ analysis.execution_time|floatformat:2 }} seconds</dd>
+                                        {% endif %}
+                                    </dl>
+                                </div>
+                            </div>
+                            
+                            {% if analysis.chart_objects.count > 0 %}
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">Charts to be deleted ({{ analysis.chart_objects.count }})</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            {% for chart in analysis.chart_objects.all %}
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-chart-bar me-2 text-muted"></i>
+                                                        <span>{{ chart.name }}</span>
+                                                        <span class="badge bg-light text-dark ms-2">{{ chart.get_chart_type_display }}</span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if analysis.insight_objects.count > 0 %}
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">Insights to be deleted ({{ analysis.insight_objects.count }})</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            {% for insight in analysis.insight_objects.all %}
+                                                <div class="col-12 mb-2">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-lightbulb me-2 text-muted"></i>
+                                                        <span>{{ insight.title }}</span>
+                                                        <span class="badge bg-light text-dark ms-2">{{ insight.get_insight_type_display }}</span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="confirm" class="form-label">
+                                        Type <strong>{{ analysis.name }}</strong> to confirm deletion:
+                                    </label>
+                                    <input type="text" class="form-control" id="confirm" name="confirm" required>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-danger" id="delete-btn" disabled>
+                                        <i class="fas fa-trash me-2"></i>Delete Analysis
+                                    </button>
+                                    <a href="{% url 'analytics:analysis_detail' analysis.pk %}" class="btn btn-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('confirm').addEventListener('input', function() {
+    const deleteBtn = document.getElementById('delete-btn');
+    const confirmValue = this.value;
+    const analysisName = '{{ analysis.name }}';
+    
+    if (confirmValue === analysisName) {
+        deleteBtn.disabled = false;
+    } else {
+        deleteBtn.disabled = true;
+    }
+});
+</script>
+{% endblock %}

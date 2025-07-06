@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analysis Results - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-chart-line me-2"></i>Analysis Results</h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'analytics:analysis_edit' analysis.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Analysis
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportResults('pdf')">PDF Report</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportResults('xlsx')">Excel Spreadsheet</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportResults('csv')">CSV Data</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportResults('json')">JSON Data</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'analytics:analysis_detail' analysis.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Analysis
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Analysis Summary -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">{{ analysis.name }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Type:</dt>
+                                        <dd class="col-sm-8">{{ analysis.get_analysis_type_display }}</dd>
+                                        
+                                        <dt class="col-sm-4">Dataset:</dt>
+                                        <dd class="col-sm-8">{{ analysis.dataset.name }}</dd>
+                                        
+                                        <dt class="col-sm-4">Status:</dt>
+                                        <dd class="col-sm-8">
+                                            {% if analysis.status == 'completed' %}
+                                                <span class="badge bg-success">{{ analysis.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">{{ analysis.get_status_display }}</span>
+                                            {% endif %}
+                                        </dd>
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Columns:</dt>
+                                        <dd class="col-sm-8">{{ analysis.selected_columns|length }}</dd>
+                                        
+                                        <dt class="col-sm-4">Runtime:</dt>
+                                        <dd class="col-sm-8">{{ analysis.execution_time|floatformat:2 }}s</dd>
+                                        
+                                        <dt class="col-sm-4">Generated:</dt>
+                                        <dd class="col-sm-8">{{ analysis.updated_at|date:"M d, Y H:i" }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                            
+                            {% if analysis.description %}
+                                <div class="mt-3">
+                                    <h6>Description</h6>
+                                    <p>{{ analysis.description }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- AI Summary -->
+                    {% if analysis.ai_summary %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-robot me-2"></i>AI Summary
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="fs-5">{{ analysis.ai_summary }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Statistical Results -->
+                    {% if analysis.results %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Statistical Results</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Metric</th>
+                                            <th>Value</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key, value in analysis.results.items %}
+                                        <tr>
+                                            <td><strong>{{ key|title }}</strong></td>
+                                            <td>{{ value }}</td>
+                                            <td class="text-muted">Statistical measure</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Charts -->
+                    {% if analysis.chart_objects.exists %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Visualizations</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for chart in analysis.chart_objects.all %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="card-title mb-0">{{ chart.name }}</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div style="height: 300px;">
+                                                <canvas id="chart-{{ chart.pk }}"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer">
+                                            <a href="{% url 'analytics:chart_detail' chart.pk %}" class="btn btn-sm btn-outline-primary">
+                                                View Full Chart
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Data Preview -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Processed Data Preview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped" id="data-preview-table">
+                                    <thead>
+                                        <tr>
+                                            {% for column in analysis.selected_columns %}
+                                                <th>{{ column }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Data will be loaded via JavaScript -->
+                                        <tr>
+                                            <td colspan="{{ analysis.selected_columns|length }}" class="text-center">
+                                                <i class="fas fa-spinner fa-spin"></i> Loading data...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- Quick Stats -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Quick Statistics</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <div class="fs-4 fw-bold text-primary">{{ analysis.chart_objects.count }}</div>
+                                        <div class="text-muted small">Charts</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <div class="fs-4 fw-bold text-success">{{ analysis.insight_objects.count }}</div>
+                                        <div class="text-muted small">Insights</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Insights -->
+                    {% if analysis.insight_objects.exists %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Key Insights</h6>
+                        </div>
+                        <div class="card-body">
+                            {% for insight in analysis.insight_objects.all %}
+                            <div class="mb-3 p-3 border rounded">
+                                <h6 class="mb-1">{{ insight.title }}</h6>
+                                <p class="text-muted mb-2">{{ insight.description|truncatewords:20 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-primary">{{ insight.get_insight_type_display }}</span>
+                                    <a href="{% url 'analytics:insight_detail' insight.pk %}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- AI Recommendations -->
+                    {% if analysis.ai_recommendations %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">AI Recommendations</h6>
+                        </div>
+                        <div class="card-body">
+                            {% for recommendation in analysis.ai_recommendations %}
+                            <div class="mb-2 p-2 bg-light rounded">
+                                <i class="fas fa-lightbulb text-warning me-2"></i>
+                                {{ recommendation }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Analysis Configuration -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">Selected Columns</label>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for column in analysis.selected_columns %}
+                                        <span class="badge bg-light text-dark">{{ column }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            {% if analysis.configuration %}
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Parameters</label>
+                                    <pre class="bg-light p-2 rounded small"><code>{{ analysis.configuration|safe }}</code></pre>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load data preview
+    loadDataPreview();
+    
+    // Render charts
+    {% for chart in analysis.chart_objects.all %}
+        renderChart('{{ chart.pk }}');
+    {% endfor %}
+});
+
+function loadDataPreview() {
+    fetch(`{% url 'analytics:api_analysis_status' analysis.pk %}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.preview_data) {
+                populateDataTable(data.preview_data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading data preview:', error);
+        });
+}
+
+function populateDataTable(data) {
+    const tbody = document.querySelector('#data-preview-table tbody');
+    tbody.innerHTML = '';
+    
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        {% for column in analysis.selected_columns %}
+            const td = document.createElement('td');
+            td.textContent = row['{{ column }}'] || '—';
+            tr.appendChild(td);
+        {% endfor %}
+        tbody.appendChild(tr);
+    });
+}
+
+function renderChart(chartId) {
+    fetch(`{% url 'analytics:chart_data' 'CHART_ID' %}`.replace('CHART_ID', chartId))
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById(`chart-${chartId}`).getContext('2d');
+            new Chart(ctx, {
+                type: data.type || 'bar',
+                data: data.data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error rendering chart:', error);
+        });
+}
+
+function exportResults(format) {
+    const url = `{% url 'analytics:analysis_results' analysis.pk %}?export=${format}`;
+    window.open(url, '_blank');
+}
+</script>
+{% endblock %}

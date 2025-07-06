@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chart Detail - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-chart-bar me-2"></i>{{ chart.name }}</h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'analytics:chart_edit' chart.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportChart('png')">PNG Image</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportChart('svg')">SVG Vector</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportChart('pdf')">PDF Document</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportChart('data')">Raw Data (JSON)</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'analytics:analysis_detail' chart.analysis.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Analysis
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-9">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">{{ chart.name }}</h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="toggleFullscreen()" id="fullscreen-btn">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="refreshChart()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="chart-container" style="height: {{ chart.height }}px;">
+                                <canvas id="main-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if chart.description %}
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h6 class="card-title">Description</h6>
+                                <p class="card-text">{{ chart.description }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Chart Data</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm" id="chart-data-table">
+                                    <thead>
+                                        <tr id="data-headers">
+                                            <!-- Headers will be populated by JavaScript -->
+                                        </tr>
+                                    </thead>
+                                    <tbody id="data-rows">
+                                        <!-- Data will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Chart Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-5">Type:</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-primary">{{ chart.get_chart_type_display }}</span>
+                                </dd>
+                                
+                                <dt class="col-sm-5">Analysis:</dt>
+                                <dd class="col-sm-7">
+                                    <a href="{% url 'analytics:analysis_detail' chart.analysis.pk %}">{{ chart.analysis.name }}</a>
+                                </dd>
+                                
+                                <dt class="col-sm-5">Dataset:</dt>
+                                <dd class="col-sm-7">
+                                    <a href="{% url 'analytics:dataset_detail' chart.analysis.dataset.pk %}">{{ chart.analysis.dataset.name }}</a>
+                                </dd>
+                                
+                                <dt class="col-sm-5">Size:</dt>
+                                <dd class="col-sm-7">{{ chart.width }}x{{ chart.height }}</dd>
+                                
+                                <dt class="col-sm-5">Interactive:</dt>
+                                <dd class="col-sm-7">
+                                    {% if chart.is_interactive %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-5">Created:</dt>
+                                <dd class="col-sm-7">{{ chart.created_at|date:"M d, Y" }}</dd>
+                                
+                                <dt class="col-sm-5">Updated:</dt>
+                                <dd class="col-sm-7">{{ chart.updated_at|date:"M d, Y" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Chart Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <pre class="bg-light p-3 rounded small"><code id="chart-config">{{ chart.configuration|safe }}</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'analytics:chart_edit' chart.pk %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-edit me-2"></i>Edit Chart
+                                </a>
+                                <button class="btn btn-outline-info btn-sm" onclick="copyChartConfig()">
+                                    <i class="fas fa-copy me-2"></i>Copy Configuration
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" onclick="shareChart()">
+                                    <i class="fas fa-share-alt me-2"></i>Share Chart
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="deleteChart()">
+                                    <i class="fas fa-trash me-2"></i>Delete Chart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let chart;
+let chartData = JSON.parse('{{ chart.data|escapejs }}');
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderChart();
+    populateDataTable();
+    formatChartConfig();
+});
+
+function renderChart() {
+    const ctx = document.getElementById('main-chart').getContext('2d');
+    const config = JSON.parse('{{ chart.configuration|escapejs }}');
+    
+    chart = new Chart(ctx, {
+        type: '{{ chart.chart_type }}',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '{{ chart.name }}'
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: config.x_axis_title || 'X Axis'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: config.y_axis_title || 'Y Axis'
+                    }
+                }
+            },
+            ...config
+        }
+    });
+}
+
+function populateDataTable() {
+    const headers = document.getElementById('data-headers');
+    const rows = document.getElementById('data-rows');
+    
+    // Clear existing content
+    headers.innerHTML = '';
+    rows.innerHTML = '';
+    
+    if (chartData.labels && chartData.datasets) {
+        // Add label header
+        const labelHeader = document.createElement('th');
+        labelHeader.textContent = 'Label';
+        headers.appendChild(labelHeader);
+        
+        // Add dataset headers
+        chartData.datasets.forEach(dataset => {
+            const header = document.createElement('th');
+            header.textContent = dataset.label;
+            headers.appendChild(header);
+        });
+        
+        // Add data rows
+        chartData.labels.forEach((label, index) => {
+            const row = document.createElement('tr');
+            
+            // Add label cell
+            const labelCell = document.createElement('td');
+            labelCell.textContent = label;
+            row.appendChild(labelCell);
+            
+            // Add data cells
+            chartData.datasets.forEach(dataset => {
+                const dataCell = document.createElement('td');
+                dataCell.textContent = dataset.data[index] || '—';
+                row.appendChild(dataCell);
+            });
+            
+            rows.appendChild(row);
+        });
+    }
+}
+
+function formatChartConfig() {
+    const configElement = document.getElementById('chart-config');
+    const config = JSON.parse('{{ chart.configuration|escapejs }}');
+    configElement.textContent = JSON.stringify(config, null, 2);
+}
+
+function refreshChart() {
+    fetch(`{% url 'analytics:chart_data' chart.pk %}`)
+        .then(response => response.json())
+        .then(data => {
+            chartData = data;
+            chart.data = chartData;
+            chart.update();
+            populateDataTable();
+        })
+        .catch(error => {
+            console.error('Error refreshing chart:', error);
+        });
+}
+
+function toggleFullscreen() {
+    const container = document.getElementById('chart-container');
+    const btn = document.getElementById('fullscreen-btn');
+    
+    if (!document.fullscreenElement) {
+        container.requestFullscreen().then(() => {
+            btn.innerHTML = '<i class="fas fa-compress"></i>';
+            container.style.height = '100vh';
+            chart.resize();
+        });
+    } else {
+        document.exitFullscreen().then(() => {
+            btn.innerHTML = '<i class="fas fa-expand"></i>';
+            container.style.height = '{{ chart.height }}px';
+            chart.resize();
+        });
+    }
+}
+
+function exportChart(format) {
+    const url = `{% url 'analytics:api_chart_export' chart.pk %}?format=${format}`;
+    window.open(url, '_blank');
+}
+
+function copyChartConfig() {
+    const config = document.getElementById('chart-config').textContent;
+    navigator.clipboard.writeText(config).then(() => {
+        alert('Chart configuration copied to clipboard!');
+    });
+}
+
+function shareChart() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        alert('Chart URL copied to clipboard!');
+    });
+}
+
+function deleteChart() {
+    if (confirm('Are you sure you want to delete this chart?')) {
+        fetch(`{% url 'analytics:chart_detail' chart.pk %}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = '{% url "analytics:analysis_detail" chart.analysis.pk %}';
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

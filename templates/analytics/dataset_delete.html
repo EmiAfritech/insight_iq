@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Dataset - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-trash me-2"></i>Delete Dataset</h1>
+                <a href="{% url 'analytics:dataset_detail' dataset.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dataset
+                </a>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-danger">
+                                <h5 class="alert-heading">Warning!</h5>
+                                <p>You are about to delete the dataset <strong>"{{ dataset.name }}"</strong>. This action cannot be undone.</p>
+                                <hr>
+                                <p class="mb-0">This will also delete:</p>
+                                <ul>
+                                    <li>All analyses based on this dataset ({{ dataset.analyses.count }})</li>
+                                    <li>All charts generated from this dataset</li>
+                                    <li>All insights derived from this dataset</li>
+                                    <li>The uploaded data file</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Dataset Information</h6>
+                                    <dl class="row">
+                                        <dt class="col-sm-3">Name:</dt>
+                                        <dd class="col-sm-9">{{ dataset.name }}</dd>
+                                        
+                                        <dt class="col-sm-3">Description:</dt>
+                                        <dd class="col-sm-9">{{ dataset.description|default:"No description" }}</dd>
+                                        
+                                        <dt class="col-sm-3">File:</dt>
+                                        <dd class="col-sm-9">{{ dataset.file.name }}</dd>
+                                        
+                                        <dt class="col-sm-3">Size:</dt>
+                                        <dd class="col-sm-9">{{ dataset.file_size_mb }} MB</dd>
+                                        
+                                        <dt class="col-sm-3">Rows:</dt>
+                                        <dd class="col-sm-9">{{ dataset.total_rows|floatformat:0 }}</dd>
+                                        
+                                        <dt class="col-sm-3">Columns:</dt>
+                                        <dd class="col-sm-9">{{ dataset.total_columns }}</dd>
+                                        
+                                        <dt class="col-sm-3">Created:</dt>
+                                        <dd class="col-sm-9">{{ dataset.created_at|date:"M d, Y H:i" }}</dd>
+                                        
+                                        <dt class="col-sm-3">Uploaded by:</dt>
+                                        <dd class="col-sm-9">{{ dataset.uploaded_by.get_full_name|default:dataset.uploaded_by.username }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                            
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="confirm" class="form-label">
+                                        Type <strong>{{ dataset.name }}</strong> to confirm deletion:
+                                    </label>
+                                    <input type="text" class="form-control" id="confirm" name="confirm" required>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-danger" id="delete-btn" disabled>
+                                        <i class="fas fa-trash me-2"></i>Delete Dataset
+                                    </button>
+                                    <a href="{% url 'analytics:dataset_detail' dataset.pk %}" class="btn btn-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('confirm').addEventListener('input', function() {
+    const deleteBtn = document.getElementById('delete-btn');
+    const confirmValue = this.value;
+    const datasetName = '{{ dataset.name }}';
+    
+    if (confirmValue === datasetName) {
+        deleteBtn.disabled = false;
+    } else {
+        deleteBtn.disabled = true;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Analysis - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Create New Analysis
+                    </h3>
+                    {% if dataset %}
+                    <p class="text-muted mb-0">Dataset: <strong>{{ dataset.name }}</strong></p>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post" id="analysis-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                                        Analysis Name <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.name.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.analysis_type.id_for_label }}" class="form-label">
+                                        Analysis Type <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.analysis_type }}
+                                    {% if form.analysis_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.analysis_type.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Select Columns</label>
+                                    <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                        <div class="mb-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="selectAllColumns()">
+                                                Select All
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearAllColumns()">
+                                                Clear All
+                                            </button>
+                                        </div>
+                                        <div id="column-selection">
+                                            {% if dataset.columns_info.columns %}
+                                                {% for column in dataset.columns_info.columns %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input column-checkbox" type="checkbox" 
+                                                           value="{{ column }}" id="col_{{ forloop.counter }}">
+                                                    <label class="form-check-label" for="col_{{ forloop.counter }}">
+                                                        {{ column }}
+                                                        <small class="text-muted">
+                                                            ({{ dataset.columns_info.dtypes|lookup:column|default:"Unknown" }})
+                                                        </small>
+                                                    </label>
+                                                </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <p class="text-muted">No columns available</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {{ form.selected_columns }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.configuration.id_for_label }}" class="form-label">
+                                        Analysis Configuration
+                                    </label>
+                                    {{ form.configuration }}
+                                    {% if form.configuration.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.configuration.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Configuration options will be auto-generated based on analysis type.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Analysis Type Help -->
+                        <div class="mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Analysis Type Information</h6>
+                                    <div id="analysis-help">
+                                        <div class="analysis-help-item" data-type="descriptive">
+                                            <strong>Descriptive Statistics:</strong> Provides summary statistics including mean, median, mode, standard deviation, and distribution analysis.
+                                        </div>
+                                        <div class="analysis-help-item d-none" data-type="correlation">
+                                            <strong>Correlation Analysis:</strong> Identifies relationships between variables using correlation coefficients and scatter plots.
+                                        </div>
+                                        <div class="analysis-help-item d-none" data-type="trend">
+                                            <strong>Trend Analysis:</strong> Analyzes data over time to identify patterns, trends, and seasonal variations.
+                                        </div>
+                                        <div class="analysis-help-item d-none" data-type="predictive">
+                                            <strong>Predictive Analysis:</strong> Uses machine learning models to forecast future values based on historical data.
+                                        </div>
+                                        <div class="analysis-help-item d-none" data-type="clustering">
+                                            <strong>Clustering Analysis:</strong> Groups similar data points together to identify patterns and segments in your data.
+                                        </div>
+                                        <div class="analysis-help-item d-none" data-type="anomaly">
+                                            <strong>Anomaly Detection:</strong> Identifies unusual patterns or outliers that deviate from normal behavior.
+                                        </div>
+                                        <div class="analysis-help-item d-none" data-type="custom">
+                                            <strong>Custom Analysis:</strong> Define your own analysis parameters and methods for specialized requirements.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% if dataset %}{% url 'analytics:dataset_detail' dataset.pk %}{% else %}{% url 'analytics:dataset_list' %}{% endif %}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submit-btn">
+                                <i class="fas fa-play me-2"></i>Create & Run Analysis
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const analysisTypeSelect = document.getElementById('{{ form.analysis_type.id_for_label }}');
+    const configurationTextarea = document.getElementById('{{ form.configuration.id_for_label }}');
+    const selectedColumnsInput = document.getElementById('{{ form.selected_columns.id_for_label }}');
+    const form = document.getElementById('analysis-form');
+    
+    // Analysis type configurations
+    const analysisConfigs = {
+        'descriptive': {
+            'statistics': ['mean', 'median', 'mode', 'std', 'var', 'min', 'max'],
+            'visualizations': ['histogram', 'box_plot', 'summary_table'],
+            'options': {
+                'include_outliers': true,
+                'confidence_level': 0.95
+            }
+        },
+        'correlation': {
+            'method': 'pearson',
+            'visualizations': ['correlation_matrix', 'scatter_plots', 'heatmap'],
+            'options': {
+                'threshold': 0.5,
+                'p_value_threshold': 0.05
+            }
+        },
+        'trend': {
+            'time_column': '',
+            'methods': ['linear_regression', 'moving_average', 'seasonal_decomposition'],
+            'visualizations': ['line_plot', 'trend_plot'],
+            'options': {
+                'window_size': 12,
+                'forecast_periods': 6
+            }
+        },
+        'predictive': {
+            'target_column': '',
+            'algorithms': ['linear_regression', 'random_forest', 'gradient_boosting'],
+            'validation': {
+                'method': 'cross_validation',
+                'folds': 5,
+                'test_size': 0.2
+            },
+            'options': {
+                'feature_selection': true,
+                'hyperparameter_tuning': true
+            }
+        },
+        'clustering': {
+            'algorithms': ['kmeans', 'hierarchical', 'dbscan'],
+            'n_clusters': 'auto',
+            'visualizations': ['scatter_plot', 'cluster_centers', 'silhouette_plot'],
+            'options': {
+                'standardize': true,
+                'distance_metric': 'euclidean'
+            }
+        },
+        'anomaly': {
+            'methods': ['isolation_forest', 'one_class_svm', 'local_outlier_factor'],
+            'contamination': 0.1,
+            'visualizations': ['scatter_plot', 'anomaly_scores'],
+            'options': {
+                'standardize': true,
+                'threshold_method': 'auto'
+            }
+        },
+        'custom': {
+            'description': 'Define your custom analysis parameters',
+            'methods': [],
+            'options': {}
+        }
+    };
+    
+    // Update configuration when analysis type changes
+    analysisTypeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
+        updateConfiguration(selectedType);
+        updateHelpText(selectedType);
+    });
+    
+    // Initialize with default type
+    if (analysisTypeSelect.value) {
+        updateConfiguration(analysisTypeSelect.value);
+        updateHelpText(analysisTypeSelect.value);
+    }
+    
+    function updateConfiguration(type) {
+        if (analysisConfigs[type]) {
+            const config = JSON.stringify(analysisConfigs[type], null, 2);
+            configurationTextarea.value = config;
+        }
+    }
+    
+    function updateHelpText(type) {
+        // Hide all help items
+        document.querySelectorAll('.analysis-help-item').forEach(item => {
+            item.classList.add('d-none');
+        });
+        
+        // Show relevant help item
+        const helpItem = document.querySelector(`[data-type="${type}"]`);
+        if (helpItem) {
+            helpItem.classList.remove('d-none');
+        }
+    }
+    
+    // Column selection handling
+    const columnCheckboxes = document.querySelectorAll('.column-checkbox');
+    
+    columnCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedColumns);
+    });
+    
+    function updateSelectedColumns() {
+        const selected = Array.from(columnCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+        
+        selectedColumnsInput.value = JSON.stringify(selected);
+    }
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        updateSelectedColumns();
+        
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Analysis...';
+    });
+});
+
+function selectAllColumns() {
+    document.querySelectorAll('.column-checkbox').forEach(cb => {
+        cb.checked = true;
+    });
+    updateSelectedColumns();
+}
+
+function clearAllColumns() {
+    document.querySelectorAll('.column-checkbox').forEach(cb => {
+        cb.checked = false;
+    });
+    updateSelectedColumns();
+}
+
+function updateSelectedColumns() {
+    const columnCheckboxes = document.querySelectorAll('.column-checkbox');
+    const selectedColumnsInput = document.getElementById('{{ form.selected_columns.id_for_label }}');
+    
+    const selected = Array.from(columnCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+    
+    selectedColumnsInput.value = JSON.stringify(selected);
+}
+</script>
+
+<style>
+.analysis-help-item {
+    padding: 0.5rem;
+    border-left: 3px solid #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.column-checkbox:checked + label {
+    font-weight: 600;
+    color: #007bff;
+}
+
+#column-selection {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.form-check {
+    margin-bottom: 0.5rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.form-check:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

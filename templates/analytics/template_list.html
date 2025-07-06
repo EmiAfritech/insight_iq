@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analysis Templates - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-clipboard-list me-2"></i>Analysis Templates</h1>
+                <a href="{% url 'analytics:template_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create Template
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <form method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control me-2" 
+                               placeholder="Search templates..." value="{{ search }}">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end align-items-center">
+                        <div class="me-3">
+                            <label for="filter-type" class="form-label">Filter by type:</label>
+                            <select id="filter-type" class="form-select" onchange="filterTemplates()">
+                                <option value="">All Types</option>
+                                <option value="descriptive">Descriptive</option>
+                                <option value="correlation">Correlation</option>
+                                <option value="trend">Trend</option>
+                                <option value="predictive">Predictive</option>
+                                <option value="clustering">Clustering</option>
+                                <option value="anomaly">Anomaly</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary active" onclick="toggleView('grid')">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="toggleView('list')">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates Grid -->
+            <div id="templates-grid" class="row">
+                {% for template in templates %}
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4 template-card" data-type="{{ template.analysis_type }}">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">{{ template.name }}</h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-link btn-sm text-muted" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{% url 'analytics:template_detail' template.pk %}">View Details</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'analytics:template_use' template.pk %}">Use Template</a></li>
+                                        {% if template.created_by == request.user %}
+                                            <li><a class="dropdown-item" href="{% url 'analytics:template_edit' template.pk %}">Edit</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="{% url 'analytics:template_delete' template.pk %}">Delete</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <p class="card-text text-muted">{{ template.description|truncatewords:15 }}</p>
+                            
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-primary">{{ template.get_analysis_type_display }}</span>
+                                {% if template.is_public %}
+                                    <span class="badge bg-success">Public</span>
+                                {% endif %}
+                                {% if template.is_system_template %}
+                                    <span class="badge bg-info">System</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-chart-line me-1"></i>{{ template.usage_count }} uses
+                                </small>
+                                <small class="text-muted">
+                                    {{ template.created_at|date:"M d, Y" }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'analytics:template_use' template.pk %}" class="btn btn-primary btn-sm flex-fill">
+                                    <i class="fas fa-play me-1"></i>Use Template
+                                </a>
+                                <a href="{% url 'analytics:template_detail' template.pk %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clipboard-list text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="mt-3">No Templates Found</h5>
+                            <p class="text-muted">No analysis templates match your search criteria.</p>
+                            <a href="{% url 'analytics:template_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create Your First Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Templates List View -->
+            <div id="templates-list" class="d-none">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th>Usage Count</th>
+                                        <th>Created</th>
+                                        <th>Created By</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for template in templates %}
+                                    <tr class="template-row" data-type="{{ template.analysis_type }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <strong>{{ template.name }}</strong>
+                                                <div class="ms-2">
+                                                    {% if template.is_public %}
+                                                        <span class="badge bg-success">Public</span>
+                                                    {% endif %}
+                                                    {% if template.is_system_template %}
+                                                        <span class="badge bg-info">System</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ template.get_analysis_type_display }}</span>
+                                        </td>
+                                        <td>{{ template.description|truncatewords:10 }}</td>
+                                        <td>{{ template.usage_count }}</td>
+                                        <td>{{ template.created_at|date:"M d, Y" }}</td>
+                                        <td>{{ template.created_by.get_full_name|default:template.created_by.username }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'analytics:template_use' template.pk %}" class="btn btn-outline-primary">
+                                                    <i class="fas fa-play"></i>
+                                                </a>
+                                                <a href="{% url 'analytics:template_detail' template.pk %}" class="btn btn-outline-secondary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if template.created_by == request.user %}
+                                                    <a href="{% url 'analytics:template_edit' template.pk %}" class="btn btn-outline-warning">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleView(view) {
+    const gridContainer = document.getElementById('templates-grid');
+    const listContainer = document.getElementById('templates-list');
+    const gridBtn = document.querySelector('[onclick="toggleView(\'grid\')"]');
+    const listBtn = document.querySelector('[onclick="toggleView(\'list\')"]');
+    
+    if (view === 'grid') {
+        gridContainer.classList.remove('d-none');
+        listContainer.classList.add('d-none');
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        gridContainer.classList.add('d-none');
+        listContainer.classList.remove('d-none');
+        gridBtn.classList.remove('active');
+        listBtn.classList.add('active');
+    }
+}
+
+function filterTemplates() {
+    const filterType = document.getElementById('filter-type').value;
+    const templateCards = document.querySelectorAll('.template-card');
+    const templateRows = document.querySelectorAll('.template-row');
+    
+    templateCards.forEach(card => {
+        if (filterType === '' || card.dataset.type === filterType) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    templateRows.forEach(row => {
+        if (filterType === '' || row.dataset.type === filterType) {
+            row.style.display = 'table-row';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

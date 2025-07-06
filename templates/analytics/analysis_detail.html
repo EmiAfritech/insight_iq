@@ -1,0 +1,581 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ analysis.name }} - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-1">{{ analysis.name }}</h1>
+                    <p class="text-muted mb-0">
+                        Dataset: <a href="{% url 'analytics:dataset_detail' analysis.dataset.pk %}">{{ analysis.dataset.name }}</a>
+                    </p>
+                </div>
+                <div class="btn-group">
+                    <a href="{% url 'analytics:analysis_edit' analysis.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </a>
+                    {% if analysis.status == 'completed' %}
+                    <button class="btn btn-success" onclick="runAnalysis()" disabled>
+                        <i class="fas fa-check me-2"></i>Completed
+                    </button>
+                    {% elif analysis.status == 'running' %}
+                    <button class="btn btn-warning" onclick="checkStatus()" id="status-btn">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Running...
+                    </button>
+                    {% elif analysis.status == 'failed' %}
+                    <button class="btn btn-danger" onclick="runAnalysis()" id="run-btn">
+                        <i class="fas fa-redo me-2"></i>Retry
+                    </button>
+                    {% else %}
+                    <button class="btn btn-primary" onclick="runAnalysis()" id="run-btn">
+                        <i class="fas fa-play me-2"></i>Run Analysis
+                    </button>
+                    {% endif %}
+                    
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportResults('pdf')">
+                                <i class="fas fa-file-pdf me-2"></i>PDF Report</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportResults('excel')">
+                                <i class="fas fa-file-excel me-2"></i>Excel Report</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportResults('json')">
+                                <i class="fas fa-file-code me-2"></i>JSON Data</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status and Progress -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Status</h5>
+                            <span class="badge bg-{{ analysis.status|default:'secondary' }} fs-6" id="status-badge">
+                                {{ analysis.get_status_display|default:analysis.status|title }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Analysis Type</h5>
+                            <span class="text-primary fs-6">{{ analysis.get_analysis_type_display }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Charts</h5>
+                            <span class="text-success fs-4">{{ charts.count }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Insights</h5>
+                            <span class="text-info fs-4">{{ insights.count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            {% if analysis.status == 'running' %}
+            <div class="mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Analysis Progress</h6>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 45%" id="progress-bar">
+                                45%
+                            </div>
+                        </div>
+                        <small class="text-muted mt-2 d-block" id="progress-text">
+                            Processing data and generating insights...
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Content Tabs -->
+            <ul class="nav nav-tabs mb-4" id="analysisTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                        <i class="fas fa-info-circle me-2"></i>Overview
+                    </button>
+                </li>
+                {% if analysis.status == 'completed' %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results" type="button" role="tab">
+                        <i class="fas fa-chart-bar me-2"></i>Results
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts" type="button" role="tab">
+                        <i class="fas fa-chart-line me-2"></i>Charts
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="insights-tab" data-bs-toggle="tab" data-bs-target="#insights" type="button" role="tab">
+                        <i class="fas fa-lightbulb me-2"></i>Insights
+                    </button>
+                </li>
+                {% endif %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="configuration-tab" data-bs-toggle="tab" data-bs-target="#configuration" type="button" role="tab">
+                        <i class="fas fa-cogs me-2"></i>Configuration
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="analysisTabsContent">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Analysis Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Name:</dt>
+                                        <dd class="col-sm-8">{{ analysis.name }}</dd>
+                                        
+                                        <dt class="col-sm-4">Description:</dt>
+                                        <dd class="col-sm-8">{{ analysis.description|default:"No description provided" }}</dd>
+                                        
+                                        <dt class="col-sm-4">Type:</dt>
+                                        <dd class="col-sm-8">{{ analysis.get_analysis_type_display }}</dd>
+                                        
+                                        <dt class="col-sm-4">Dataset:</dt>
+                                        <dd class="col-sm-8">
+                                            <a href="{% url 'analytics:dataset_detail' analysis.dataset.pk %}">
+                                                {{ analysis.dataset.name }}
+                                            </a>
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">Created:</dt>
+                                        <dd class="col-sm-8">{{ analysis.created_at|date:"M d, Y H:i" }}</dd>
+                                        
+                                        <dt class="col-sm-4">Updated:</dt>
+                                        <dd class="col-sm-8">{{ analysis.updated_at|date:"M d, Y H:i" }}</dd>
+                                        
+                                        <dt class="col-sm-4">Created By:</dt>
+                                        <dd class="col-sm-8">{{ analysis.created_by.get_full_name|default:analysis.created_by.username }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Selected Columns</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if analysis.selected_columns %}
+                                        <div class="row">
+                                            {% for column in analysis.selected_columns %}
+                                            <div class="col-sm-6 mb-2">
+                                                <span class="badge bg-primary">{{ column }}</span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted">All columns selected</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Tab -->
+                {% if analysis.status == 'completed' %}
+                <div class="tab-pane fade" id="results" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Analysis Results</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if analysis.results %}
+                                <div class="result-summary mb-4">
+                                    <h6>Summary Statistics</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Metric</th>
+                                                    <th>Value</th>
+                                                    <th>Description</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Records Analyzed</td>
+                                                    <td>{{ analysis.dataset.total_rows|default:0 }}</td>
+                                                    <td>Total number of data points processed</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Variables</td>
+                                                    <td>{{ analysis.selected_columns|length|default:analysis.dataset.total_columns }}</td>
+                                                    <td>Number of variables included in analysis</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Execution Time</td>
+                                                    <td>{{ analysis.execution_time|default:"N/A" }}s</td>
+                                                    <td>Time taken to complete the analysis</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="ai-summary">
+                                    <h6>AI Summary</h6>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-robot me-2"></i>
+                                        {{ analysis.ai_summary|default:"AI summary will be generated after analysis completion." }}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-chart-bar text-muted mb-3" style="font-size: 3rem;"></i>
+                                    <h5 class="text-muted">No results available</h5>
+                                    <p class="text-muted">Run the analysis to see results</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Tab -->
+                <div class="tab-pane fade" id="charts" role="tabpanel">
+                    <div class="row">
+                        {% for chart in charts %}
+                        <div class="col-lg-6 mb-4">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">{{ chart.name }}</h6>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-secondary" onclick="refreshChart('{{ chart.pk }}')">
+                                            <i class="fas fa-refresh"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary" onclick="downloadChart('{{ chart.pk }}')">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="chart-{{ chart.pk }}" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="text-center py-4">
+                                <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem;"></i>
+                                <h5 class="text-muted">No charts available</h5>
+                                <p class="text-muted">Charts will be generated during analysis</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Insights Tab -->
+                <div class="tab-pane fade" id="insights" role="tabpanel">
+                    <div class="row">
+                        {% for insight in insights %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card insight-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title">{{ insight.title }}</h6>
+                                        <span class="badge bg-{{ insight.insight_type }}">
+                                            {{ insight.get_insight_type_display }}
+                                        </span>
+                                    </div>
+                                    <p class="card-text">{{ insight.description }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            Confidence: {{ insight.confidence_score|floatformat:1 }}%
+                                        </small>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if not insight.is_verified %}
+                                            <button class="btn btn-outline-success" onclick="verifyInsight('{{ insight.pk }}')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            {% endif %}
+                                            <button class="btn btn-outline-secondary" onclick="hideInsight('{{ insight.pk }}')">
+                                                <i class="fas fa-eye-slash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="text-center py-4">
+                                <i class="fas fa-lightbulb text-muted mb-3" style="font-size: 3rem;"></i>
+                                <h5 class="text-muted">No insights available</h5>
+                                <p class="text-muted">AI insights will be generated during analysis</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Configuration Tab -->
+                <div class="tab-pane fade" id="configuration" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Analysis Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="bg-light p-3 rounded"><code>{{ analysis.configuration|default:"No configuration available" }}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let statusCheckInterval;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh status if analysis is running
+    {% if analysis.status == 'running' %}
+    statusCheckInterval = setInterval(checkStatus, 5000);
+    {% endif %}
+    
+    // Load charts if analysis is completed
+    {% if analysis.status == 'completed' %}
+    loadCharts();
+    {% endif %}
+});
+
+function runAnalysis() {
+    const btn = document.getElementById('run-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Starting...';
+    }
+    
+    fetch('{% url "analytics:analysis_run" analysis.pk %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            showToast('error', data.message || 'Failed to start analysis');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-play me-2"></i>Run Analysis';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'An error occurred while starting the analysis');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play me-2"></i>Run Analysis';
+        }
+    });
+}
+
+function checkStatus() {
+    fetch('{% url "analytics:api_analysis_status" analysis.pk %}')
+    .then(response => response.json())
+    .then(data => {
+        updateStatus(data.status, data.progress, data.message);
+        
+        if (data.status === 'completed' || data.status === 'failed') {
+            clearInterval(statusCheckInterval);
+            setTimeout(() => location.reload(), 1000);
+        }
+    })
+    .catch(error => {
+        console.error('Status check error:', error);
+    });
+}
+
+function updateStatus(status, progress, message) {
+    const statusBadge = document.getElementById('status-badge');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    
+    if (statusBadge) {
+        statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusBadge.className = `badge bg-${getStatusColor(status)} fs-6`;
+    }
+    
+    if (progressBar && progress !== undefined) {
+        progressBar.style.width = progress + '%';
+        progressBar.textContent = progress + '%';
+    }
+    
+    if (progressText && message) {
+        progressText.textContent = message;
+    }
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'queued': 'secondary',
+        'running': 'warning',
+        'completed': 'success',
+        'failed': 'danger'
+    };
+    return colors[status] || 'secondary';
+}
+
+function loadCharts() {
+    {% for chart in charts %}
+    loadChart('{{ chart.pk }}');
+    {% endfor %}
+}
+
+function loadChart(chartId) {
+    fetch(`{% url "analytics:chart_data" "PLACEHOLDER" %}`.replace('PLACEHOLDER', chartId))
+    .then(response => response.json())
+    .then(data => {
+        renderChart(chartId, data);
+    })
+    .catch(error => {
+        console.error('Chart loading error:', error);
+    });
+}
+
+function renderChart(chartId, data) {
+    const ctx = document.getElementById(`chart-${chartId}`);
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+    }
+}
+
+function exportResults(format) {
+    showToast('info', `Exporting results as ${format.toUpperCase()}...`);
+    // Implement export functionality
+}
+
+function verifyInsight(insightId) {
+    fetch(`{% url "analytics:insight_verify" "PLACEHOLDER" %}`.replace('PLACEHOLDER', insightId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showToast('success', 'Insight verified successfully');
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to verify insight');
+    });
+}
+
+function hideInsight(insightId) {
+    fetch(`{% url "analytics:insight_hide" "PLACEHOLDER" %}`.replace('PLACEHOLDER', insightId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showToast('success', 'Insight hidden successfully');
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to hide insight');
+    });
+}
+
+function showToast(type, message) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+
+<style>
+.insight-card {
+    transition: transform 0.2s;
+}
+
+.insight-card:hover {
+    transform: translateY(-2px);
+}
+
+pre code {
+    color: #333;
+}
+
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+    0% { background-position: 1rem 0; }
+    100% { background-position: 0 0; }
+}
+</style>
+{% endblock %}

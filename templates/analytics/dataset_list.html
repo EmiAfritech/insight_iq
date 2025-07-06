@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Datasets - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-database me-2"></i>Datasets</h1>
+                <a href="{% url 'analytics:dataset_upload' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Upload Dataset
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <form method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control me-2" 
+                               placeholder="Search datasets..." value="{{ search }}">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end align-items-center">
+                        <span class="text-muted me-3">{{ datasets.count }} datasets</span>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary active" id="grid-view">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="list-view">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid View -->
+            <div id="grid-container" class="row">
+                {% for dataset in datasets %}
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card dataset-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">{{ dataset.name }}</h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link text-muted" type="button" 
+                                            data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{% url 'analytics:dataset_detail' dataset.pk %}">
+                                            <i class="fas fa-eye me-2"></i>View Details</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'analytics:dataset_edit' dataset.pk %}">
+                                            <i class="fas fa-edit me-2"></i>Edit</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'analytics:dataset_preview' dataset.pk %}">
+                                            <i class="fas fa-table me-2"></i>Preview Data</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="{% url 'analytics:dataset_delete' dataset.pk %}">
+                                            <i class="fas fa-trash me-2"></i>Delete</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <p class="card-text text-muted small mb-3">{{ dataset.description|truncatewords:20 }}</p>
+                            
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="fw-bold text-primary">{{ dataset.total_rows|default:0 }}</div>
+                                        <small class="text-muted">Rows</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="fw-bold text-success">{{ dataset.total_columns|default:0 }}</div>
+                                        <small class="text-muted">Columns</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="badge bg-{{ dataset.status|default:'secondary' }}">
+                                    {{ dataset.get_status_display|default:dataset.status }}
+                                </span>
+                                {% if dataset.is_public %}
+                                    <span class="badge bg-info">Public</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">{{ dataset.created_at|date:"M d, Y" }}</small>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'analytics:analysis_create' dataset.pk %}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-chart-line me-1"></i>Analyze
+                                    </a>
+                                    <a href="{% url 'analytics:dataset_detail' dataset.pk %}" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-database text-muted mb-3" style="font-size: 4rem;"></i>
+                        <h4 class="text-muted">No datasets found</h4>
+                        <p class="text-muted">Upload your first dataset to get started with analytics</p>
+                        <a href="{% url 'analytics:dataset_upload' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Upload Dataset
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- List View (Hidden by default) -->
+            <div id="list-container" class="d-none">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Rows</th>
+                                <th>Columns</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dataset in datasets %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ dataset.name }}</div>
+                                    {% if dataset.is_public %}
+                                        <span class="badge bg-info">Public</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ dataset.description|truncatewords:15 }}</td>
+                                <td>{{ dataset.total_rows|default:0 }}</td>
+                                <td>{{ dataset.total_columns|default:0 }}</td>
+                                <td>
+                                    <span class="badge bg-{{ dataset.status|default:'secondary' }}">
+                                        {{ dataset.get_status_display|default:dataset.status }}
+                                    </span>
+                                </td>
+                                <td>{{ dataset.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'analytics:dataset_detail' dataset.pk %}" 
+                                           class="btn btn-outline-primary">View</a>
+                                        <a href="{% url 'analytics:analysis_create' dataset.pk %}" 
+                                           class="btn btn-outline-success">Analyze</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const gridView = document.getElementById('grid-view');
+    const listView = document.getElementById('list-view');
+    const gridContainer = document.getElementById('grid-container');
+    const listContainer = document.getElementById('list-container');
+    
+    gridView.addEventListener('click', function() {
+        gridView.classList.add('active');
+        listView.classList.remove('active');
+        gridContainer.classList.remove('d-none');
+        listContainer.classList.add('d-none');
+    });
+    
+    listView.addEventListener('click', function() {
+        listView.classList.add('active');
+        gridView.classList.remove('active');
+        listContainer.classList.remove('d-none');
+        gridContainer.classList.add('d-none');
+    });
+});
+</script>
+{% endblock %}

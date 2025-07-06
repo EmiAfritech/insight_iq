@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Analysis - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-edit me-2"></i>Edit Analysis</h1>
+                <a href="{% url 'analytics:analysis_detail' analysis.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Analysis
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Analysis Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">Analysis Name</label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">{{ form.name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.analysis_type.id_for_label }}" class="form-label">Analysis Type</label>
+                                    {{ form.analysis_type }}
+                                    {% if form.analysis_type.errors %}
+                                        <div class="text-danger">{{ form.analysis_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Select Columns</label>
+                                    <div class="row" id="column-selection">
+                                        {% for column in dataset.columns_info %}
+                                            <div class="col-md-4 mb-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           id="col_{{ column.name }}" 
+                                                           name="selected_columns" 
+                                                           value="{{ column.name }}"
+                                                           {% if column.name in analysis.selected_columns %}checked{% endif %}>
+                                                    <label class="form-check-label" for="col_{{ column.name }}">
+                                                        {{ column.name }}
+                                                        <span class="badge bg-secondary ms-1">{{ column.type }}</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="form-text">Select the columns you want to include in the analysis</div>
+                                </div>
+                                
+                                <div class="mb-3" id="analysis-parameters">
+                                    <label class="form-label">Analysis Parameters</label>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div id="parameter-container">
+                                                <!-- Parameters will be loaded dynamically based on analysis type -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save Changes
+                                    </button>
+                                    <button type="submit" name="action" value="save_and_run" class="btn btn-success">
+                                        <i class="fas fa-play me-2"></i>Save & Run Analysis
+                                    </button>
+                                    <a href="{% url 'analytics:analysis_detail' analysis.pk %}" class="btn btn-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Analysis Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-5">Dataset:</dt>
+                                <dd class="col-sm-7">{{ analysis.dataset.name }}</dd>
+                                
+                                <dt class="col-sm-5">Type:</dt>
+                                <dd class="col-sm-7">{{ analysis.get_analysis_type_display }}</dd>
+                                
+                                <dt class="col-sm-5">Status:</dt>
+                                <dd class="col-sm-7">
+                                    {% if analysis.status == 'completed' %}
+                                        <span class="badge bg-success">{{ analysis.get_status_display }}</span>
+                                    {% elif analysis.status == 'running' %}
+                                        <span class="badge bg-warning">{{ analysis.get_status_display }}</span>
+                                    {% elif analysis.status == 'failed' %}
+                                        <span class="badge bg-danger">{{ analysis.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ analysis.get_status_display }}</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-5">Created:</dt>
+                                <dd class="col-sm-7">{{ analysis.created_at|date:"M d, Y" }}</dd>
+                                
+                                <dt class="col-sm-5">Updated:</dt>
+                                <dd class="col-sm-7">{{ analysis.updated_at|date:"M d, Y" }}</dd>
+                                
+                                {% if analysis.execution_time %}
+                                    <dt class="col-sm-5">Runtime:</dt>
+                                    <dd class="col-sm-7">{{ analysis.execution_time|floatformat:2 }}s</dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Analysis Types</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>Descriptive</strong>
+                                        <div class="text-muted small">Basic statistics and summaries</div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>Correlation</strong>
+                                        <div class="text-muted small">Relationships between variables</div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>Trend</strong>
+                                        <div class="text-muted small">Time series and trends</div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>Predictive</strong>
+                                        <div class="text-muted small">Machine learning predictions</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Dynamic parameter loading based on analysis type
+document.getElementById('{{ form.analysis_type.id_for_label }}').addEventListener('change', function() {
+    const analysisType = this.value;
+    loadAnalysisParameters(analysisType);
+});
+
+function loadAnalysisParameters(analysisType) {
+    const parameterContainer = document.getElementById('parameter-container');
+    parameterContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading parameters...</div>';
+    
+    // In a real implementation, this would fetch parameters from the server
+    // For now, we'll show some sample parameters
+    setTimeout(() => {
+        let parametersHTML = '';
+        
+        switch(analysisType) {
+            case 'descriptive':
+                parametersHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Include Percentiles</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="include_percentiles" name="include_percentiles" checked>
+                            <label class="form-check-label" for="include_percentiles">
+                                Include 25th, 50th, and 75th percentiles
+                            </label>
+                        </div>
+                    </div>
+                `;
+                break;
+            case 'correlation':
+                parametersHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Correlation Method</label>
+                        <select class="form-select" name="correlation_method">
+                            <option value="pearson">Pearson</option>
+                            <option value="spearman">Spearman</option>
+                            <option value="kendall">Kendall</option>
+                        </select>
+                    </div>
+                `;
+                break;
+            case 'trend':
+                parametersHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Time Column</label>
+                        <select class="form-select" name="time_column">
+                            <option value="">Select time column</option>
+                            {% for column in dataset.columns_info %}
+                                {% if column.type == 'datetime' %}
+                                    <option value="{{ column.name }}">{{ column.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                `;
+                break;
+            case 'predictive':
+                parametersHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Target Column</label>
+                        <select class="form-select" name="target_column">
+                            <option value="">Select target column</option>
+                            {% for column in dataset.columns_info %}
+                                <option value="{{ column.name }}">{{ column.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Model Type</label>
+                        <select class="form-select" name="model_type">
+                            <option value="regression">Regression</option>
+                            <option value="classification">Classification</option>
+                        </select>
+                    </div>
+                `;
+                break;
+            default:
+                parametersHTML = '<div class="text-muted">No additional parameters required for this analysis type.</div>';
+        }
+        
+        parameterContainer.innerHTML = parametersHTML;
+    }, 500);
+}
+
+// Load parameters on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const analysisType = document.getElementById('{{ form.analysis_type.id_for_label }}').value;
+    if (analysisType) {
+        loadAnalysisParameters(analysisType);
+    }
+});
+</script>
+{% endblock %}

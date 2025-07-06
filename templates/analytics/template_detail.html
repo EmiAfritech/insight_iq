@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Template Detail - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-clipboard-list me-2"></i>{{ template.name }}</h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'analytics:template_use' template.pk %}" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Use Template
+                    </a>
+                    {% if template.created_by == request.user %}
+                        <a href="{% url 'analytics:template_edit' template.pk %}" class="btn btn-outline-warning">
+                            <i class="fas fa-edit me-2"></i>Edit
+                        </a>
+                    {% endif %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-share-alt me-2"></i>Share
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="shareTemplate('link')">Copy Link</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="shareTemplate('export')">Export Template</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'analytics:template_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Templates
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">{{ template.name }}</h5>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-primary">{{ template.get_analysis_type_display }}</span>
+                                {% if template.is_public %}
+                                    <span class="badge bg-success">Public</span>
+                                {% endif %}
+                                {% if template.is_system_template %}
+                                    <span class="badge bg-info">System</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6 class="text-muted">Description</h6>
+                                <p class="fs-5">{{ template.description }}</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-muted">Analysis Type</h6>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <i class="fas fa-chart-line text-primary fs-3"></i>
+                                            </div>
+                                            <div class="col">
+                                                <h6 class="mb-1">{{ template.get_analysis_type_display }}</h6>
+                                                <p class="text-muted mb-0">
+                                                    {% if template.analysis_type == 'descriptive' %}
+                                                        Generate basic statistics and data summaries
+                                                    {% elif template.analysis_type == 'correlation' %}
+                                                        Analyze relationships between variables
+                                                    {% elif template.analysis_type == 'trend' %}
+                                                        Identify trends and patterns over time
+                                                    {% elif template.analysis_type == 'predictive' %}
+                                                        Build predictive models and forecasts
+                                                    {% elif template.analysis_type == 'clustering' %}
+                                                        Group similar data points together
+                                                    {% elif template.analysis_type == 'anomaly' %}
+                                                        Detect unusual patterns and outliers
+                                                    {% else %}
+                                                        Custom analysis configuration
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-muted">Configuration</h6>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <pre class="bg-light p-3 rounded"><code>{{ template.configuration|safe }}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-muted">Usage Instructions</h6>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <ol>
+                                            <li>Select a dataset to analyze</li>
+                                            <li>Configure the analysis parameters</li>
+                                            <li>Choose the columns to include</li>
+                                            <li>Run the analysis</li>
+                                            <li>Review the results and insights</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Usage History</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>User</th>
+                                            <th>Dataset</th>
+                                            <th>Analysis</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Usage history would be populated here -->
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">
+                                                No usage history available
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Template Statistics</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <div class="fs-4 fw-bold text-primary">{{ template.usage_count }}</div>
+                                        <div class="text-muted small">Total Uses</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <div class="fs-4 fw-bold text-success">4.8</div>
+                                        <div class="text-muted small">Rating</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Template Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-5">Type:</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-primary">{{ template.get_analysis_type_display }}</span>
+                                </dd>
+                                
+                                <dt class="col-sm-5">Created:</dt>
+                                <dd class="col-sm-7">{{ template.created_at|date:"M d, Y" }}</dd>
+                                
+                                <dt class="col-sm-5">Updated:</dt>
+                                <dd class="col-sm-7">{{ template.updated_at|date:"M d, Y" }}</dd>
+                                
+                                <dt class="col-sm-5">Created by:</dt>
+                                <dd class="col-sm-7">{{ template.created_by.get_full_name|default:template.created_by.username }}</dd>
+                                
+                                <dt class="col-sm-5">Usage Count:</dt>
+                                <dd class="col-sm-7">{{ template.usage_count }}</dd>
+                                
+                                <dt class="col-sm-5">Status:</dt>
+                                <dd class="col-sm-7">
+                                    {% if template.is_public %}
+                                        <span class="badge bg-success">Public</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Private</span>
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'analytics:template_use' template.pk %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-play me-2"></i>Use This Template
+                                </a>
+                                {% if template.created_by == request.user %}
+                                    <a href="{% url 'analytics:template_edit' template.pk %}" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-edit me-2"></i>Edit Template
+                                    </a>
+                                {% endif %}
+                                <button class="btn btn-outline-info btn-sm" onclick="duplicateTemplate()">
+                                    <i class="fas fa-copy me-2"></i>Duplicate Template
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="downloadTemplate()">
+                                    <i class="fas fa-download me-2"></i>Download Template
+                                </button>
+                                {% if template.created_by == request.user %}
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteTemplate()">
+                                        <i class="fas fa-trash me-2"></i>Delete Template
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Related Templates</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                <!-- Related templates would be populated here -->
+                                <div class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>Sales Analysis</strong>
+                                        <div class="text-muted small">Trend analysis for sales data</div>
+                                    </div>
+                                    <span class="badge bg-primary">Trend</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>Customer Segmentation</strong>
+                                        <div class="text-muted small">Group customers by behavior</div>
+                                    </div>
+                                    <span class="badge bg-primary">Clustering</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function shareTemplate(method) {
+    const url = window.location.href;
+    const title = '{{ template.name }}';
+    
+    switch(method) {
+        case 'link':
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Template link copied to clipboard!');
+            });
+            break;
+        case 'export':
+            window.open(`${url}?export=json`, '_blank');
+            break;
+    }
+}
+
+function duplicateTemplate() {
+    if (confirm('Create a duplicate of this template?')) {
+        fetch(`{% url 'analytics:template_detail' template.pk %}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({action: 'duplicate'})
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.redirect_url;
+            } else {
+                alert('Error duplicating template: ' + data.error);
+            }
+        });
+    }
+}
+
+function downloadTemplate() {
+    const url = `{% url 'analytics:template_detail' template.pk %}?export=json`;
+    window.open(url, '_blank');
+}
+
+function deleteTemplate() {
+    if (confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
+        fetch(`{% url 'analytics:template_detail' template.pk %}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = '{% url "analytics:template_list" %}';
+            } else {
+                alert('Error deleting template');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

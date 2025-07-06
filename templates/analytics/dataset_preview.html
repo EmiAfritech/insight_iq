@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dataset Preview - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-eye me-2"></i>Dataset Preview</h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'analytics:dataset_detail' dataset.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dataset
+                    </a>
+                    <a href="{% url 'analytics:analysis_create' dataset.pk %}" class="btn btn-primary">
+                        <i class="fas fa-chart-line me-2"></i>Start Analysis
+                    </a>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">{{ dataset.name }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">{{ dataset.description|default:"No description available" }}</p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                {% for tag in dataset.tags %}
+                                    <span class="badge bg-secondary">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Stats</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <i class="fas fa-table-rows text-primary fs-4"></i>
+                                    </div>
+                                    <div class="fw-bold">{{ dataset.total_rows|floatformat:0 }}</div>
+                                    <div class="text-muted small">Rows</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <i class="fas fa-table-columns text-success fs-4"></i>
+                                    </div>
+                                    <div class="fw-bold">{{ dataset.total_columns }}</div>
+                                    <div class="text-muted small">Columns</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Data Preview</h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="refreshPreview()">
+                                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                                </button>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-download me-1"></i>Export
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="exportData('csv')">CSV</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportData('xlsx')">Excel</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportData('json')">JSON</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="preview-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="preview-table">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                {% for column in columns %}
+                                                    <th>{{ column.name }}</th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in preview_data %}
+                                                <tr>
+                                                    {% for value in row %}
+                                                        <td>{{ value|default:"—" }}</td>
+                                                    {% endfor %}
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div class="text-muted">
+                                        Showing {{ preview_data|length }} of {{ dataset.total_rows|floatformat:0 }} rows
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="loadMoreRows()" id="load-more-btn">
+                                            <i class="fas fa-chevron-down me-1"></i>Load More
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Column Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Column</th>
+                                            <th>Type</th>
+                                            <th>Non-Null Count</th>
+                                            <th>Null Count</th>
+                                            <th>Unique Values</th>
+                                            <th>Sample Values</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for column in columns %}
+                                            <tr>
+                                                <td><strong>{{ column.name }}</strong></td>
+                                                <td>
+                                                    <span class="badge bg-info">{{ column.type }}</span>
+                                                </td>
+                                                <td>{{ column.non_null_count|default:"—" }}</td>
+                                                <td>{{ column.null_count|default:"—" }}</td>
+                                                <td>{{ column.unique_count|default:"—" }}</td>
+                                                <td>
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        {% for value in column.sample_values %}
+                                                            <span class="badge bg-light text-dark">{{ value }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+const rowsPerPage = 50;
+
+function refreshPreview() {
+    location.reload();
+}
+
+function loadMoreRows() {
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading...';
+    
+    fetch(`{% url 'analytics:dataset_preview' dataset.pk %}?page=${currentPage + 1}&per_page=${rowsPerPage}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.rows && data.rows.length > 0) {
+                const tbody = document.querySelector('#preview-table tbody');
+                data.rows.forEach(row => {
+                    const tr = document.createElement('tr');
+                    row.forEach(value => {
+                        const td = document.createElement('td');
+                        td.textContent = value || '—';
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                currentPage++;
+                
+                if (data.has_more) {
+                    loadMoreBtn.innerHTML = '<i class="fas fa-chevron-down me-1"></i>Load More';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading more rows:', error);
+            loadMoreBtn.innerHTML = '<i class="fas fa-chevron-down me-1"></i>Load More';
+        });
+}
+
+function exportData(format) {
+    const url = `{% url 'analytics:dataset_preview' dataset.pk %}?export=${format}`;
+    window.open(url, '_blank');
+}
+</script>
+{% endblock %}

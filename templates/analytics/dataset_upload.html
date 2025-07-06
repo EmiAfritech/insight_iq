@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Dataset - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-upload me-2"></i>Upload Dataset
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="upload-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                                        Dataset Name <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.name.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Public Dataset</label>
+                                    <div class="form-check">
+                                        {{ form.is_public }}
+                                        <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
+                                            Make this dataset accessible to other users
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.file.id_for_label }}" class="form-label">
+                                Data File <span class="text-danger">*</span>
+                            </label>
+                            
+                            <div class="upload-area border rounded p-4 text-center" id="upload-area">
+                                <div class="upload-content">
+                                    <i class="fas fa-cloud-upload-alt text-muted mb-3" style="font-size: 3rem;"></i>
+                                    <h5 class="text-muted">Drag & drop your file here</h5>
+                                    <p class="text-muted mb-3">or click to browse</p>
+                                    {{ form.file }}
+                                    <small class="text-muted d-block">
+                                        Supported formats: CSV, Excel (.xlsx, .xls)<br>
+                                        Maximum file size: 10MB
+                                    </small>
+                                </div>
+                                
+                                <div class="upload-progress d-none" id="upload-progress">
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <div class="upload-status">Uploading...</div>
+                                </div>
+                                
+                                <div class="upload-success d-none" id="upload-success">
+                                    <i class="fas fa-check-circle text-success mb-2" style="font-size: 2rem;"></i>
+                                    <div class="text-success">File uploaded successfully!</div>
+                                    <div class="file-info mt-2">
+                                        <span class="file-name"></span>
+                                        <span class="file-size text-muted"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if form.file.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.file.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="data-preview d-none" id="data-preview">
+                            <h5 class="mb-3">Data Preview</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm" id="preview-table">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Rows</h6>
+                                            <span class="h4 text-primary" id="row-count">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Columns</h6>
+                                            <span class="h4 text-success" id="col-count">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Size</h6>
+                                            <span class="h4 text-info" id="file-size">0 KB</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'analytics:dataset_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Datasets
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submit-btn">
+                                <i class="fas fa-save me-2"></i>Upload Dataset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('{{ form.file.id_for_label }}');
+    const uploadProgress = document.getElementById('upload-progress');
+    const uploadSuccess = document.getElementById('upload-success');
+    const dataPreview = document.getElementById('data-preview');
+    const submitBtn = document.getElementById('submit-btn');
+    const form = document.getElementById('upload-form');
+    
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('border-primary');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('border-primary');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('border-primary');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    uploadArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+    
+    function handleFileSelect(file) {
+        // Show upload progress
+        document.querySelector('.upload-content').classList.add('d-none');
+        uploadProgress.classList.remove('d-none');
+        
+        // Simulate file processing
+        let progress = 0;
+        const progressBar = uploadProgress.querySelector('.progress-bar');
+        
+        const interval = setInterval(function() {
+            progress += 10;
+            progressBar.style.width = progress + '%';
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                
+                // Show success
+                uploadProgress.classList.add('d-none');
+                uploadSuccess.classList.remove('d-none');
+                
+                // Update file info
+                uploadSuccess.querySelector('.file-name').textContent = file.name;
+                uploadSuccess.querySelector('.file-size').textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+                
+                // Show data preview (mock data)
+                showDataPreview(file);
+            }
+        }, 100);
+    }
+    
+    function showDataPreview(file) {
+        // Mock data preview
+        const mockData = {
+            headers: ['Name', 'Age', 'City', 'Salary'],
+            rows: [
+                ['John Doe', '25', 'New York', '$50,000'],
+                ['Jane Smith', '30', 'Los Angeles', '$65,000'],
+                ['Bob Johnson', '35', 'Chicago', '$75,000']
+            ],
+            totalRows: 1000,
+            totalColumns: 4
+        };
+        
+        const table = document.getElementById('preview-table');
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+        
+        // Clear existing content
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+        
+        // Add headers
+        const headerRow = document.createElement('tr');
+        mockData.headers.forEach(header => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        
+        // Add rows
+        mockData.rows.forEach(row => {
+            const tr = document.createElement('tr');
+            row.forEach(cell => {
+                const td = document.createElement('td');
+                td.textContent = cell;
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+        
+        // Update stats
+        document.getElementById('row-count').textContent = mockData.totalRows.toLocaleString();
+        document.getElementById('col-count').textContent = mockData.totalColumns;
+        document.getElementById('file-size').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+        
+        // Show preview
+        dataPreview.classList.remove('d-none');
+        
+        // Auto-fill dataset name if empty
+        const nameInput = document.getElementById('{{ form.name.id_for_label }}');
+        if (!nameInput.value) {
+            nameInput.value = file.name.split('.')[0];
+        }
+    }
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    });
+});
+</script>
+
+<style>
+.upload-area {
+    border: 2px dashed #dee2e6;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.upload-area.border-primary {
+    border-color: #007bff !important;
+    background-color: #f8f9fa;
+}
+
+.upload-area input[type="file"] {
+    position: absolute;
+    left: -9999px;
+}
+
+.data-preview {
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.upload-area .upload-content {
+    padding: 2rem;
+}
+
+.upload-area .upload-progress,
+.upload-area .upload-success {
+    padding: 2rem;
+}
+</style>
+{% endblock %}
