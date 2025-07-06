@@ -31,7 +31,7 @@
 
 .widget-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
     padding-bottom: 10px;
@@ -351,25 +351,11 @@ function initializeGrid() {
 }
 
 function initializeCharts() {
-    {% for widget in dashboard.widgets.all %}
-    {% if widget.type == 'chart' %}
-    const ctx{{ widget.id }} = document.getElementById('chart-{{ widget.id }}').getContext('2d');
-    new Chart(ctx{{ widget.id }}, {
-        type: '{{ widget.chart_type|default:"bar" }}',
-        data: {{ widget.chart_data|safe }},
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: '{{ widget.title }}'
-                }
-            }
-        }
+    const chartConfigs = {{ chart_configs, safe }};
+    chartConfigs.forEach(config => {
+        const ctx = document.getElementById(`chart-${config.id}`).getContext('2d');
+        new Chart(ctx, config.options);
     });
-    {% endif %}
-    {% endfor %}
 }
 
 function initializeFilters() {

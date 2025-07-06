@@ -7,8 +7,8 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'reports:list' %}">Reports</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'reports:detail' report.pk %}">{{ report.title }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:report_list' %}">Reports</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:report_detail' report.pk %}">{{ report.title }}</a></li>
         <li class="breadcrumb-item active">Share</li>
     </ol>
 </nav>
@@ -139,7 +139,7 @@
                             <button type="button" class="btn btn-outline-secondary" onclick="copyLink()">
                                 <i class="fas fa-copy"></i> Copy Link
                             </button>
-                            <a href="{% url 'reports:detail' report.pk %}" class="btn btn-secondary">
+                            <a href="{% url 'reports:report_detail' report.pk %}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Back to Report
                             </a>
                         </div>
@@ -273,7 +273,7 @@ function toggleShareOptions() {
 function shareReport() {
     const formData = new FormData(document.getElementById('shareForm'));
     
-    fetch('{% url "reports:share" report.pk %}', {
+    fetch('{% url "reports:report_share" report.pk %}', {
         method: 'POST',
         body: formData,
         headers: {
@@ -301,7 +301,7 @@ function copyLink() {
     
     if (shareType === 'public') {
         // Generate public link
-        const publicLink = `${window.location.origin}{% url 'reports:public_view' report.pk %}`;
+        const publicLink = `${window.location.origin}{% url 'reports:public_report' report.share_token %}`;
         navigator.clipboard.writeText(publicLink).then(() => {
             showNotification('Public link copied to clipboard!', 'success');
         });

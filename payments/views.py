@@ -23,7 +23,7 @@ class PaymentListView(TenantRequiredMixin, ListView):
         return Payment.objects.filter(tenant=self.tenant).order_by('-created_at')
 
 
-class PaymentMethodListView(TenantRequiredMixin, PermissionRequiredMixin, ListView):
+class PaymentMethodListView(TenantRequiredMixin, LoginRequiredMixin, ListView):
     """
     List payment methods for the tenant
     """
@@ -36,7 +36,7 @@ class PaymentMethodListView(TenantRequiredMixin, PermissionRequiredMixin, ListVi
         return PaymentMethod.objects.filter(tenant=self.tenant, is_active=True)
 
 
-class PaymentMethodCreateView(TenantRequiredMixin, PermissionRequiredMixin, CreateView):
+class PaymentMethodCreateView(TenantRequiredMixin, LoginRequiredMixin, CreateView):
     """
     Add a new payment method
     """
@@ -52,7 +52,7 @@ class PaymentMethodCreateView(TenantRequiredMixin, PermissionRequiredMixin, Crea
         return super().form_valid(form)
 
 
-class PaymentMethodDeleteView(TenantRequiredMixin, PermissionRequiredMixin, DeleteView):
+class PaymentMethodDeleteView(TenantRequiredMixin, LoginRequiredMixin, DeleteView):
     """
     Delete a payment method
     """

@@ -36,7 +36,7 @@ class InsightDetailView(TenantRequiredMixin, DetailView):
         )
 
 
-class GenerateInsightsView(TenantRequiredMixin, PermissionRequiredMixin, TemplateView):
+class GenerateInsightsView(TenantRequiredMixin, LoginRequiredMixin, TemplateView):
     """
     Generate new AI insights
     """

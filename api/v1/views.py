@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -301,3 +301,104 @@ class ExportAnalysisView(APIView):
             {'error': 'Unsupported export format'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+# API endpoints for template functionality
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def duplicate_dashboard(request, dashboard_id):
+    """Duplicate a dashboard"""
+    try:
+        dashboard = get_object_or_404(Dashboard, id=dashboard_id, tenant=request.tenant)
+        # Create a copy with new name
+        new_dashboard = Dashboard.objects.create(
+            tenant=dashboard.tenant,
+            name=f"{dashboard.name} (Copy)",
+            description=dashboard.description,
+            layout=dashboard.layout,
+            category=dashboard.category,
+            is_public=False,
+            created_by=request.user
+        )
+        # Copy widgets
+        for widget in dashboard.widgets.all():
+            widget.pk = None
+            widget.dashboard = new_dashboard
+            widget.save()
+        
+        return Response({
+            'success': True,
+            'dashboard_id': new_dashboard.id,
+            'message': 'Dashboard duplicated successfully'
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_share(request, share_id):
+    """Revoke a report share"""
+    try:
+        from reports.models import ReportShare
+        share = get_object_or_404(ReportShare, id=share_id, report__tenant=request.tenant)
+        share.delete()
+        return Response({
+            'success': True,
+            'message': 'Share revoked successfully'
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def export_user_data(request):
+    """Export user data"""
+    try:
+        import json
+        from django.http import JsonResponse
+        
+        # Collect user data
+        user_data = {
+            'profile': {
+                'name': request.user.get_full_name(),
+                'email': request.user.email,
+                'date_joined': request.user.date_joined.isoformat(),
+            },
+            'reports': list(request.user.created_reports.values('title', 'created_at')),
+            'dashboards': list(request.user.created_dashboards.values('name', 'created_at')),
+        }
+        
+        response = JsonResponse(user_data)
+        response['Content-Disposition'] = 'attachment; filename="user_data.json"'
+        return response
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def export_status(request, export_id):
+    """Check export status"""
+    try:
+        from reports.models import ReportExport
+        export = get_object_or_404(ReportExport, id=export_id, report__tenant=request.tenant)
+        return Response({
+            'progress': export.progress,
+            'status': export.get_status_display(),
+            'completed': export.status == 'completed',
+            'download_url': export.file_url if export.status == 'completed' else None
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)

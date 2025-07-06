@@ -22,7 +22,7 @@ class DataSourceListView(TenantRequiredMixin, ListView):
         )
 
 
-class DataSourceCreateView(TenantRequiredMixin, PermissionRequiredMixin, CreateView):
+class DataSourceCreateView(TenantRequiredMixin, LoginRequiredMixin, CreateView):
     """
     Create a new data source
     """
@@ -53,7 +53,7 @@ class DataSourceDetailView(TenantRequiredMixin, DetailView):
         )
 
 
-class DataSourceUpdateView(TenantRequiredMixin, PermissionRequiredMixin, UpdateView):
+class DataSourceUpdateView(TenantRequiredMixin, LoginRequiredMixin, UpdateView):
     """
     Update data source
     """
@@ -74,7 +74,7 @@ class DataSourceUpdateView(TenantRequiredMixin, PermissionRequiredMixin, UpdateV
         return super().form_valid(form)
 
 
-class DataSourceDeleteView(TenantRequiredMixin, PermissionRequiredMixin, DeleteView):
+class DataSourceDeleteView(TenantRequiredMixin, LoginRequiredMixin, DeleteView):
     """
     Delete data source
     """
@@ -106,7 +106,7 @@ class DataSourceTestView(TenantRequiredMixin, DetailView):
         )
 
 
-class DataPullCreateView(TenantRequiredMixin, PermissionRequiredMixin, CreateView):
+class DataPullCreateView(TenantRequiredMixin, LoginRequiredMixin, CreateView):
     """
     Create a new data pull
     """

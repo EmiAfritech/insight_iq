@@ -1,9 +1,10 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.db import models
 from tenants.mixins import TenantRequiredMixin, PermissionRequiredMixin
 from .models import Dashboard, DashboardWidget, DashboardTemplate, DashboardShare, DashboardView
 from analytics.models import DataSet, Analysis
@@ -69,17 +70,17 @@ class DashboardListView(TenantRequiredMixin, ListView):
         ).order_by('-updated_at')
 
 
-class DashboardCreateView(TenantRequiredMixin, PermissionRequiredMixin, CreateView):
+class DashboardCreateView(TenantRequiredMixin, LoginRequiredMixin, CreateView):
     """
     Create a new dashboard
     """
     model = Dashboard
     template_name = 'dashboards/create.html'
     fields = ['name', 'description', 'theme', 'auto_refresh', 'refresh_interval']
-    required_permission = 'create_reports'
     
     def form_valid(self, form):
         form.instance.created_by = self.request.user
+        form.instance.tenant = self.request.tenant
         messages.success(self.request, 'Dashboard created successfully!')
         return super().form_valid(form)
     
@@ -125,17 +126,16 @@ class DashboardDetailView(TenantRequiredMixin, DetailView):
         return context
 
 
-class DashboardEditView(TenantRequiredMixin, PermissionRequiredMixin, UpdateView):
+class DashboardEditView(TenantRequiredMixin, LoginRequiredMixin, UpdateView):
     """
     Edit dashboard
     """
     model = Dashboard
     template_name = 'dashboards/edit.html'
     fields = ['name', 'description', 'theme', 'auto_refresh', 'refresh_interval', 'is_public']
-    required_permission = 'create_reports'
     
     def get_queryset(self):
-        return Dashboard.objects.filter(created_by=self.request.user)
+        return Dashboard.objects.filter(created_by=self.request.user, tenant=self.request.tenant)
     
     def form_valid(self, form):
         messages.success(self.request, 'Dashboard updated successfully!')
@@ -145,17 +145,16 @@ class DashboardEditView(TenantRequiredMixin, PermissionRequiredMixin, UpdateView
         return reverse_lazy('dashboards:detail', kwargs={'pk': self.object.pk})
 
 
-class DashboardDeleteView(TenantRequiredMixin, PermissionRequiredMixin, DeleteView):
+class DashboardDeleteView(TenantRequiredMixin, LoginRequiredMixin, DeleteView):
     """
     Delete dashboard
     """
     model = Dashboard
     template_name = 'dashboards/delete.html'
     success_url = reverse_lazy('dashboards:list')
-    required_permission = 'create_reports'
     
     def get_queryset(self):
-        return Dashboard.objects.filter(created_by=self.request.user)
+        return Dashboard.objects.filter(created_by=self.request.user, tenant=self.request.tenant)
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Dashboard deleted successfully!')
@@ -176,7 +175,7 @@ class DashboardShareView(TenantRequiredMixin, TemplateView):
         return context
 
 
-class WidgetCreateView(TenantRequiredMixin, PermissionRequiredMixin, CreateView):
+class WidgetCreateView(TenantRequiredMixin, LoginRequiredMixin, CreateView):
     """
     Create a new widget for dashboard
     """
@@ -184,10 +183,9 @@ class WidgetCreateView(TenantRequiredMixin, PermissionRequiredMixin, CreateView)
     template_name = 'dashboards/widget_create.html'
     fields = ['title', 'widget_type', 'chart', 'dataset', 'analysis', 'configuration', 
               'width', 'height', 'position_x', 'position_y']
-    required_permission = 'create_reports'
     
     def form_valid(self, form):
-        dashboard = get_object_or_404(Dashboard, pk=self.kwargs['pk'], created_by=self.request.user)
+        dashboard = get_object_or_404(Dashboard, pk=self.kwargs['pk'], created_by=self.request.user, tenant=self.request.tenant)
         form.instance.dashboard = dashboard
         messages.success(self.request, 'Widget created successfully!')
         return super().form_valid(form)
@@ -196,7 +194,7 @@ class WidgetCreateView(TenantRequiredMixin, PermissionRequiredMixin, CreateView)
         return reverse_lazy('dashboards:detail', kwargs={'pk': self.kwargs['pk']})
 
 
-class WidgetEditView(TenantRequiredMixin, PermissionRequiredMixin, UpdateView):
+class WidgetEditView(TenantRequiredMixin, LoginRequiredMixin, UpdateView):
     """
     Edit dashboard widget
     """
@@ -204,10 +202,9 @@ class WidgetEditView(TenantRequiredMixin, PermissionRequiredMixin, UpdateView):
     template_name = 'dashboards/widget_edit.html'
     fields = ['title', 'widget_type', 'chart', 'dataset', 'analysis', 'configuration', 
               'width', 'height', 'position_x', 'position_y', 'is_visible']
-    required_permission = 'create_reports'
     
     def get_queryset(self):
-        return DashboardWidget.objects.filter(dashboard__created_by=self.request.user)
+        return DashboardWidget.objects.filter(dashboard__created_by=self.request.user, dashboard__tenant=self.request.tenant)
     
     def form_valid(self, form):
         messages.success(self.request, 'Widget updated successfully!')
@@ -217,16 +214,15 @@ class WidgetEditView(TenantRequiredMixin, PermissionRequiredMixin, UpdateView):
         return reverse_lazy('dashboards:detail', kwargs={'pk': self.object.dashboard.pk})
 
 
-class WidgetDeleteView(TenantRequiredMixin, PermissionRequiredMixin, DeleteView):
+class WidgetDeleteView(TenantRequiredMixin, LoginRequiredMixin, DeleteView):
     """
     Delete dashboard widget
     """
     model = DashboardWidget
     template_name = 'dashboards/widget_delete.html'
-    required_permission = 'create_reports'
     
     def get_queryset(self):
-        return DashboardWidget.objects.filter(dashboard__created_by=self.request.user)
+        return DashboardWidget.objects.filter(dashboard__created_by=self.request.user, dashboard__tenant=self.request.tenant)
     
     def delete(self, request, *args, **kwargs):
         dashboard_pk = self.get_object().dashboard.pk
@@ -256,12 +252,11 @@ class DashboardTemplateDetailView(TenantRequiredMixin, DetailView):
     context_object_name = 'template'
 
 
-class DashboardTemplateUseView(TenantRequiredMixin, PermissionRequiredMixin, TemplateView):
+class DashboardTemplateUseView(TenantRequiredMixin, LoginRequiredMixin, TemplateView):
     """
     Use dashboard template to create new dashboard
     """
     template_name = 'dashboards/template_use.html'
-    required_permission = 'create_reports'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -277,6 +272,7 @@ class DashboardTemplateUseView(TenantRequiredMixin, PermissionRequiredMixin, Tem
             name=f"{template.name} - {timezone.now().strftime('%Y-%m-%d')}",
             description=template.description,
             created_by=request.user,
+            tenant=request.tenant,
             layout=template.layout_template
         )
         

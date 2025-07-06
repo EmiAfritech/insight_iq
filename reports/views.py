@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.conf import settings
 from tenants.decorators import tenant_required
 from tenants.mixins import TenantRequiredMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import (
@@ -19,9 +19,10 @@ from .forms import ReportForm, ReportTemplateForm, ReportShareForm, ReportCommen
 from .utils import generate_report, export_report
 import json
 import os
+import os
 
 
-class ReportListView(LoginRequiredMixin, TenantRequiredMixin, ListView):
+class ReportListView(TenantRequiredMixin, LoginRequiredMixin, ListView):
     """List all reports for the current tenant"""
     model = Report
     template_name = 'reports/report_list.html'
@@ -62,7 +63,7 @@ class ReportListView(LoginRequiredMixin, TenantRequiredMixin, ListView):
         return context
 
 
-class ReportDetailView(LoginRequiredMixin, TenantRequiredMixin, DetailView):
+class ReportDetailView(TenantRequiredMixin, LoginRequiredMixin, DetailView):
     """View a specific report"""
     model = Report
     template_name = 'reports/report_detail.html'
@@ -96,7 +97,7 @@ class ReportDetailView(LoginRequiredMixin, TenantRequiredMixin, DetailView):
         return context
 
 
-class ReportCreateView(LoginRequiredMixin, TenantRequiredMixin, CreateView):
+class ReportCreateView(TenantRequiredMixin, LoginRequiredMixin, CreateView):
     """Create a new report"""
     model = Report
     form_class = ReportForm
@@ -122,7 +123,7 @@ class ReportCreateView(LoginRequiredMixin, TenantRequiredMixin, CreateView):
         return response
 
 
-class ReportUpdateView(LoginRequiredMixin, TenantRequiredMixin, UpdateView):
+class ReportUpdateView(TenantRequiredMixin, LoginRequiredMixin, UpdateView):
     """Edit an existing report"""
     model = Report
     form_class = ReportForm
@@ -150,7 +151,7 @@ class ReportUpdateView(LoginRequiredMixin, TenantRequiredMixin, UpdateView):
         return response
 
 
-class ReportDeleteView(TenantRequiredMixin, PermissionRequiredMixin, DeleteView):
+class ReportDeleteView(TenantRequiredMixin, LoginRequiredMixin, DeleteView):
     """
     Delete report
     """

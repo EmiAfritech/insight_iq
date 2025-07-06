@@ -7,8 +7,8 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'reports:list' %}">Reports</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'reports:detail' report.pk %}">{{ report.title }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:report_list' %}">Reports</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:report_detail' report.pk %}">{{ report.title }}</a></li>
         <li class="breadcrumb-item active">Export</li>
     </ol>
 </nav>
@@ -148,7 +148,7 @@
                             <button type="button" class="btn btn-outline-secondary" onclick="previewExport()">
                                 <i class="fas fa-eye"></i> Preview
                             </button>
-                            <a href="{% url 'reports:detail' report.pk %}" class="btn btn-secondary">
+                            <a href="{% url 'reports:report_detail' report.pk %}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Back to Report
                             </a>
                         </div>
@@ -251,7 +251,7 @@ function startExport() {
     modal.show();
     
     // Start export
-    fetch('{% url "reports:export" report.pk %}', {
+    fetch('{% url "reports:report_export" report.pk %}', {
         method: 'POST',
         body: formData,
         headers: {

@@ -7,7 +7,7 @@ from tenants.mixins import TenantRequiredMixin, PermissionRequiredMixin
 from tenants.models import TenantUser
 
 
-class UserListView(TenantRequiredMixin, PermissionRequiredMixin, ListView):
+class UserListView(TenantRequiredMixin, LoginRequiredMixin, ListView):
     """
     List all users in the tenant
     """

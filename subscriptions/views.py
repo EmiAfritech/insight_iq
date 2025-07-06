@@ -30,7 +30,7 @@ class CurrentSubscriptionView(TenantRequiredMixin, DetailView):
         return Subscription.objects.get(tenant=self.tenant)
 
 
-class UpgradeSubscriptionView(TenantRequiredMixin, PermissionRequiredMixin, TemplateView):
+class UpgradeSubscriptionView(TenantRequiredMixin, LoginRequiredMixin, TemplateView):
     """
     Upgrade subscription
     """
@@ -47,7 +47,7 @@ class UpgradeSubscriptionView(TenantRequiredMixin, PermissionRequiredMixin, Temp
         return context
 
 
-class CancelSubscriptionView(TenantRequiredMixin, PermissionRequiredMixin, TemplateView):
+class CancelSubscriptionView(TenantRequiredMixin, LoginRequiredMixin, TemplateView):
     """
     Cancel subscription
     """
