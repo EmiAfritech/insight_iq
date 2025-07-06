@@ -4,9 +4,11 @@ import json
 import random
 import requests
 import warnings
+from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -18,14 +20,7 @@ from allauth.account.utils import user_email, user_username
 from allauth.socialaccount import app_settings
 from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.models import SocialAccount, SocialApp
-from allauth.tests import (
-    Mock,
-    MockedResponse,
-    TestCase,
-    mocked_response,
-    patch,
-)
-from allauth.utils import get_user_model
+from allauth.tests import MockedResponse, TestCase, mocked_response
 
 
 def setup_app(provider_id):
@@ -261,9 +256,8 @@ class OAuth2TestsMixin(object):
             )
             self.assertRedirects(resp, reverse("socialaccount_signup"))
 
+    @override_settings(SOCIALACCOUNT_STORE_TOKENS=True)
     def test_account_tokens(self, multiple_login=False):
-        if not app_settings.STORE_TOKENS:
-            return
         email = "user@example.com"
         user = get_user_model()(is_active=True)
         user_email(user, email)
@@ -280,7 +274,9 @@ class OAuth2TestsMixin(object):
                 process="connect",
             )
         # get account
-        sa = SocialAccount.objects.filter(user=user, provider=self.provider.id).get()
+        sa = SocialAccount.objects.filter(
+            user=user, provider=self.provider.app.provider_id or self.provider.id
+        ).get()
         # The following lines don't actually test that much, but at least
         # we make sure that the code is hit.
         provider_account = sa.get_provider_account()
@@ -293,13 +289,16 @@ class OAuth2TestsMixin(object):
             t = sa.socialtoken_set.get()
             # verify access_token and refresh_token
             self.assertEqual("testac", t.token)
-            self.assertEqual(
-                t.token_secret,
-                json.loads(self.get_login_response_json(with_refresh_token=True)).get(
-                    "refresh_token", ""
-                ),
-            )
+            resp = json.loads(self.get_login_response_json(with_refresh_token=True))
+            if "refresh_token" in resp:
+                refresh_token = resp.get("refresh_token")
+            elif "refreshToken" in resp:
+                refresh_token = resp.get("refreshToken")
+            else:
+                refresh_token = ""
+            self.assertEqual(t.token_secret, refresh_token)
 
+    @override_settings(SOCIALACCOUNT_STORE_TOKENS=True)
     def test_account_refresh_token_saved_next_login(self):
         """
         fails if a login missing a refresh token, deletes the previously

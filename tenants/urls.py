@@ -4,6 +4,7 @@ from . import views
 app_name = 'tenants'
 
 urlpatterns = [
+    path('register/', views.TenantCreateView.as_view(), name='register'),
     path('create/', views.TenantCreateView.as_view(), name='create'),
     path('setup/', views.TenantSetupView.as_view(), name='setup'),
     path('switch/', views.TenantSwitchView.as_view(), name='switch'),

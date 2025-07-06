@@ -1,43 +1,40 @@
-# Django Core
-Django==4.2.7
+# Django Core (Updated for Py3.12)
+Django==4.2.8  # Last LTS version supporting Py3.12
 django-environ==0.11.2
 django-cors-headers==4.3.1
 django-extensions==3.2.3
 
-# Database
-psycopg2-binary==2.9.7
-django-tenant-schemas==1.10.0
-django-tenants==3.5.0
+# Database (Critical updates)
+psycopg2-binary==2.9.9  # Must be >=2.9.6 for Py3.12
+django-tenants==3.5.0  # Replaces django-tenant-schemas (deprecated)
 
 # Authentication & Security
-django-allauth==0.57.0
-django-rest-auth==0.9.5
+django-allauth==0.58.2  # Py3.12 compatible
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.3.0
 django-crispy-forms==2.1
-crispy-bootstrap5==0.7
+crispy-bootstrap5==2023.10  # Updated for Bootstrap 5.3
 
-# File Processing
-pandas==2.1.3
-numpy==1.24.3
-openpyxl==3.1.2
-xlrd==2.0.1
+# File Processing (Key updates)
+pandas==2.1.4  # Requires Python >=3.9
+openpyxl==3.1.2  # Modern Excel handling (replaces xlrd)
+numpy==1.26.0  # Py3.12 wheels available
 
 # AI & ML
 scikit-learn==1.3.2
 matplotlib==3.8.2
 seaborn==0.13.0
-plotly==5.17.0
+plotly==5.18.0
 openai==1.3.5
 requests==2.31.0
 
 # Data Visualization
-bokeh==3.3.2
+bokeh==3.3.4
 dash==2.14.2
 dash-bootstrap-components==1.5.0
 
-# Task Queue
-celery==5.3.4
+# Task Queue (Critical updates)
+celery==5.3.6  # Must be >=5.3.4 for Py3.12
 redis==5.0.1
 django-celery-beat==2.5.0
 django-celery-results==2.5.0

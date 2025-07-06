@@ -314,14 +314,16 @@
 </div>
 
 {% endblock %}
-
+{{ chart_configs|json_script:"chart-configs" }}
 {% block extra_js %}
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack-all.js"></script>
 <script>
 let grid;
 let editMode = false;
 let isFullscreen = false;
+
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeGrid();
@@ -351,7 +353,7 @@ function initializeGrid() {
 }
 
 function initializeCharts() {
-    const chartConfigs = {{ chart_configs, safe }};
+    const chartConfigs = JSON.parse(document.getElementById('chart-configs').textContent);
     chartConfigs.forEach(config => {
         const ctx = document.getElementById(`chart-${config.id}`).getContext('2d');
         new Chart(ctx, config.options);

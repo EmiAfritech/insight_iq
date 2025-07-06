@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator
+from tenants.models import Tenant
 import uuid
 
 
@@ -9,9 +10,10 @@ class DataSet(models.Model):
     Model for storing uploaded datasets
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='datasets')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_datasets')
     
     # File information
     file = models.FileField(
@@ -61,10 +63,11 @@ class Analysis(models.Model):
     Model for storing analysis results
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='analyses')
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name='analyses')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_analyses')
     
     # Analysis type
     ANALYSIS_TYPES = [
@@ -120,6 +123,7 @@ class Chart(models.Model):
     Model for storing chart configurations and data
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='charts')
     analysis = models.ForeignKey(Analysis, on_delete=models.CASCADE, related_name='chart_objects')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -164,6 +168,7 @@ class Insight(models.Model):
     Model for storing AI-generated insights
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='insights')
     analysis = models.ForeignKey(Analysis, on_delete=models.CASCADE, related_name='insight_objects')
     
     # Insight content
@@ -191,6 +196,7 @@ class Insight(models.Model):
     
     # Status
     is_verified = models.BooleanField(default=False)
+    verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_insights')
     is_hidden = models.BooleanField(default=False)
     
     # Metadata
@@ -210,9 +216,10 @@ class AnalysisTemplate(models.Model):
     Model for storing reusable analysis templates
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='analysis_templates', null=True, blank=True)
     name = models.CharField(max_length=200)
     description = models.TextField()
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_templates')
     
     # Template configuration
     analysis_type = models.CharField(max_length=20, choices=Analysis.ANALYSIS_TYPES)

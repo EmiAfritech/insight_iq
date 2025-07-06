@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 import json
 import requests
 from datetime import date, datetime
+from unittest.mock import Mock
 
-import django
 from django.core.files.base import ContentFile
 from django.db import models
 from django.test import RequestFactory, TestCase
@@ -15,12 +15,6 @@ from django.views import csrf
 from allauth import app_settings
 
 from . import utils
-
-
-try:
-    from unittest.mock import Mock, patch
-except ImportError:
-    from mock import Mock, patch  # noqa
 
 
 class MockedResponse(object):
@@ -37,6 +31,10 @@ class MockedResponse(object):
 
     def raise_for_status(self):
         pass
+
+    @property
+    def ok(self):
+        return self.status_code // 100 == 2
 
     @property
     def text(self):
@@ -98,15 +96,8 @@ class BasicTests(TestCase):
             def get_prep_value(self, value):
                 return "somevalue"
 
-            if django.VERSION < (3, 0):
-
-                def from_db_value(self, value, expression, connection, context):
-                    return some_value
-
-            else:
-
-                def from_db_value(self, value, expression, connection):
-                    return some_value
+            def from_db_value(self, value, expression, connection):
+                return some_value
 
         class SomeModel(models.Model):
             dt = models.DateTimeField()

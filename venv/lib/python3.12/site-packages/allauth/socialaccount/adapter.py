@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+import warnings
 
 from django.core.exceptions import (
     ImproperlyConfigured,
@@ -255,11 +255,13 @@ class DefaultSocialAccountAdapter(object):
                     "client_id",
                     "secret",
                     "key",
-                    "certificate_key",
                     "settings",
                 ]:
                     if field in config:
                         setattr(app, field, config[field])
+                if "certificate_key" in config:
+                    warnings.warn("'certificate_key' should be moved into app.settings")
+                    app.settings["certificate_key"] = config["certificate_key"]
                 if client_id and app.client_id != client_id:
                     continue
                 if (

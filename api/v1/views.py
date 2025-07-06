@@ -38,6 +38,7 @@ class DataSetViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing datasets
     """
+    queryset = DataSet.objects.all()
     serializer_class = DataSetSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     
@@ -88,6 +89,7 @@ class AnalysisViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing analyses
     """
+    queryset = Analysis.objects.all()
     serializer_class = AnalysisSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     
@@ -132,6 +134,7 @@ class InsightViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet for viewing insights
     """
+    queryset = Insight.objects.all()
     serializer_class = InsightSerializer
     permission_classes = [permissions.IsAuthenticated]
     
@@ -166,6 +169,7 @@ class DashboardViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing dashboards
     """
+    queryset = Dashboard.objects.all()
     serializer_class = DashboardSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     
