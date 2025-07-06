@@ -1,0 +1,675 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ dashboard.name }} - Dashboards{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
+<style>
+.widget-container {
+    min-height: 250px;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.widget-container:hover {
+    border-color: #007bff;
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.widget-container.has-widget {
+    border: 1px solid #dee2e6;
+    background: white;
+    padding: 15px;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.widget-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.grid-stack {
+    background: #f8f9fa;
+    min-height: 600px;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.grid-stack-item {
+    transition: all 0.3s ease;
+}
+
+.grid-stack-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.dashboard-toolbar {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fullscreen-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboards:list' %}">Dashboards</a></li>
+        <li class="breadcrumb-item active">{{ dashboard.name }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" id="dashboardContainer">
+    <!-- Dashboard Toolbar -->
+    <div class="dashboard-toolbar">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h3 class="mb-0">
+                    <i class="fas fa-tachometer-alt text-primary"></i>
+                    {{ dashboard.name }}
+                </h3>
+                <p class="text-muted mb-0">{{ dashboard.description }}</p>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex gap-2 justify-content-end">
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-secondary" onclick="refreshDashboard()" title="Refresh">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="toggleEditMode()" title="Edit Mode" id="editModeBtn">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="toggleFullscreen()" title="Fullscreen">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-primary" onclick="exportDashboard()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <button class="btn btn-outline-success" onclick="shareDashboard()">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+                    </div>
+                    
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'dashboards:edit' dashboard.pk %}">
+                                <i class="fas fa-edit"></i> Edit Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="duplicateDashboard()">
+                                <i class="fas fa-copy"></i> Duplicate
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="saveAsTemplate()">
+                                <i class="fas fa-save"></i> Save as Template
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'dashboards:delete' dashboard.pk %}">
+                                <i class="fas fa-trash text-danger"></i> Delete
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Filters -->
+    {% if dashboard.filters %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-filter"></i> Filters
+                <button class="btn btn-sm btn-outline-secondary float-end" onclick="clearFilters()">
+                    <i class="fas fa-times"></i> Clear All
+                </button>
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row" id="dashboardFilters">
+                {% for filter in dashboard.filters %}
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">{{ filter.label }}</label>
+                    {% if filter.type == 'date' %}
+                        <input type="date" class="form-control filter-input" 
+                               data-filter="{{ filter.key }}" value="{{ filter.default }}">
+                    {% elif filter.type == 'select' %}
+                        <select class="form-select filter-input" data-filter="{{ filter.key }}">
+                            {% for option in filter.options %}
+                            <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>
+                                {{ option.label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    {% elif filter.type == 'range' %}
+                        <input type="range" class="form-range filter-input" 
+                               data-filter="{{ filter.key }}" min="{{ filter.min }}" 
+                               max="{{ filter.max }}" value="{{ filter.default }}">
+                    {% else %}
+                        <input type="text" class="form-control filter-input" 
+                               data-filter="{{ filter.key }}" value="{{ filter.default }}">
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Dashboard Grid -->
+    <div class="grid-stack" id="dashboardGrid">
+        {% for widget in dashboard.widgets.all %}
+        <div class="grid-stack-item" data-gs-x="{{ widget.position_x }}" data-gs-y="{{ widget.position_y }}" 
+             data-gs-width="{{ widget.width }}" data-gs-height="{{ widget.height }}" data-widget-id="{{ widget.id }}">
+            <div class="widget-container has-widget">
+                <div class="widget-header">
+                    <h6 class="widget-title">{{ widget.title }}</h6>
+                    <div class="widget-actions">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshWidget('{{ widget.id }}')" title="Refresh">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editWidget('{{ widget.id }}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeWidget('{{ widget.id }}')" title="Remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="widget-content" id="widget-{{ widget.id }}">
+                    {% if widget.type == 'chart' %}
+                        <canvas id="chart-{{ widget.id }}"></canvas>
+                    {% elif widget.type == 'metric' %}
+                        <div class="text-center">
+                            <div class="h2 text-{{ widget.color|default:'primary' }}">{{ widget.value }}</div>
+                            <div class="text-muted">{{ widget.label }}</div>
+                            {% if widget.change %}
+                            <div class="text-{{ widget.trend|default:'success' }}">
+                                <i class="fas fa-arrow-{{ widget.trend|default:'up' }}"></i>
+                                {{ widget.change }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% elif widget.type == 'table' %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        {% for header in widget.headers %}
+                                        <th>{{ header }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in widget.data %}
+                                    <tr>
+                                        {% for cell in row %}
+                                        <td>{{ cell }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% elif widget.type == 'text' %}
+                        <div class="widget-text">
+                            {{ widget.content|safe }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add Widget Button (Edit Mode) -->
+    <div class="text-center mt-4" id="addWidgetSection" style="display: none;">
+        <button class="btn btn-primary btn-lg" onclick="showAddWidgetModal()">
+            <i class="fas fa-plus"></i> Add Widget
+        </button>
+    </div>
+</div>
+
+<!-- Add Widget Modal -->
+<div class="modal fade" id="addWidgetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Widget</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addWidgetForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="widget_type" class="form-label">Widget Type</label>
+                        <select class="form-select" id="widget_type" name="type" required>
+                            <option value="">Select Type</option>
+                            <option value="chart">Chart</option>
+                            <option value="metric">Metric</option>
+                            <option value="table">Table</option>
+                            <option value="text">Text</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="widget_title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="widget_title" name="title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="widget_data_source" class="form-label">Data Source</label>
+                        <select class="form-select" id="widget_data_source" name="data_source">
+                            <option value="">Select Data Source</option>
+                            {% for source in data_sources %}
+                            <option value="{{ source.id }}">{{ source.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addWidget()">Add Widget</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack-all.js"></script>
+<script>
+let grid;
+let editMode = false;
+let isFullscreen = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeGrid();
+    initializeCharts();
+    initializeFilters();
+    
+    // Auto-refresh dashboard every 5 minutes
+    setInterval(refreshDashboard, 300000);
+});
+
+function initializeGrid() {
+    grid = GridStack.init({
+        staticGrid: !editMode,
+        animate: true,
+        cellHeight: 70,
+        margin: 10,
+        resizable: {
+            handles: 'e, se, s, sw, w'
+        }
+    });
+    
+    grid.on('change', function(event, items) {
+        if (editMode) {
+            saveDashboardLayout();
+        }
+    });
+}
+
+function initializeCharts() {
+    {% for widget in dashboard.widgets.all %}
+    {% if widget.type == 'chart' %}
+    const ctx{{ widget.id }} = document.getElementById('chart-{{ widget.id }}').getContext('2d');
+    new Chart(ctx{{ widget.id }}, {
+        type: '{{ widget.chart_type|default:"bar" }}',
+        data: {{ widget.chart_data|safe }},
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '{{ widget.title }}'
+                }
+            }
+        }
+    });
+    {% endif %}
+    {% endfor %}
+}
+
+function initializeFilters() {
+    const filterInputs = document.querySelectorAll('.filter-input');
+    filterInputs.forEach(input => {
+        input.addEventListener('change', applyFilters);
+    });
+}
+
+function toggleEditMode() {
+    editMode = !editMode;
+    const btn = document.getElementById('editModeBtn');
+    const addSection = document.getElementById('addWidgetSection');
+    
+    if (editMode) {
+        btn.innerHTML = '<i class="fas fa-save"></i>';
+        btn.classList.add('btn-primary');
+        btn.classList.remove('btn-outline-secondary');
+        addSection.style.display = 'block';
+        grid.enableMove(true);
+        grid.enableResize(true);
+    } else {
+        btn.innerHTML = '<i class="fas fa-edit"></i>';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-secondary');
+        addSection.style.display = 'none';
+        grid.enableMove(false);
+        grid.enableResize(false);
+        saveDashboardLayout();
+    }
+}
+
+function toggleFullscreen() {
+    const container = document.getElementById('dashboardContainer');
+    const btn = event.target.closest('button');
+    
+    if (!isFullscreen) {
+        container.classList.add('fullscreen-mode');
+        btn.innerHTML = '<i class="fas fa-compress"></i>';
+        isFullscreen = true;
+    } else {
+        container.classList.remove('fullscreen-mode');
+        btn.innerHTML = '<i class="fas fa-expand"></i>';
+        isFullscreen = false;
+    }
+}
+
+function refreshDashboard() {
+    showNotification('Refreshing dashboard...', 'info');
+    
+    fetch(`{% url 'dashboards:detail' dashboard.pk %}refresh/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            showNotification('Error refreshing dashboard', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Refresh error:', error);
+        showNotification('Error refreshing dashboard', 'error');
+    });
+}
+
+function refreshWidget(widgetId) {
+    const widget = document.getElementById(`widget-${widgetId}`);
+    
+    fetch(`/api/v1/dashboards/widgets/${widgetId}/refresh/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            widget.innerHTML = data.content;
+            showNotification('Widget refreshed!', 'success');
+        } else {
+            showNotification('Error refreshing widget', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Widget refresh error:', error);
+        showNotification('Error refreshing widget', 'error');
+    });
+}
+
+function editWidget(widgetId) {
+    window.location.href = `{% url 'dashboards:widget_edit' dashboard.pk 0 %}`.replace('0', widgetId);
+}
+
+function removeWidget(widgetId) {
+    if (confirm('Are you sure you want to remove this widget?')) {
+        fetch(`/api/v1/dashboards/widgets/${widgetId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                grid.removeWidget(document.querySelector(`[data-widget-id="${widgetId}"]`));
+                showNotification('Widget removed!', 'success');
+            } else {
+                showNotification('Error removing widget', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Remove widget error:', error);
+            showNotification('Error removing widget', 'error');
+        });
+    }
+}
+
+function showAddWidgetModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addWidgetModal'));
+    modal.show();
+}
+
+function addWidget() {
+    const formData = new FormData(document.getElementById('addWidgetForm'));
+    formData.append('dashboard', '{{ dashboard.pk }}');
+    
+    fetch(`{% url 'dashboards:widget_create' dashboard.pk %}`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Widget added!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('addWidgetModal')).hide();
+            location.reload();
+        } else {
+            showNotification('Error adding widget: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Add widget error:', error);
+        showNotification('Error adding widget', 'error');
+    });
+}
+
+function applyFilters() {
+    const filters = {};
+    const filterInputs = document.querySelectorAll('.filter-input');
+    
+    filterInputs.forEach(input => {
+        const key = input.getAttribute('data-filter');
+        filters[key] = input.value;
+    });
+    
+    fetch(`{% url 'dashboards:detail' dashboard.pk %}filter/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(filters)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            showNotification('Error applying filters', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Filter error:', error);
+        showNotification('Error applying filters', 'error');
+    });
+}
+
+function clearFilters() {
+    const filterInputs = document.querySelectorAll('.filter-input');
+    filterInputs.forEach(input => {
+        input.value = '';
+    });
+    applyFilters();
+}
+
+function saveDashboardLayout() {
+    const layout = [];
+    grid.engine.nodes.forEach(node => {
+        layout.push({
+            widget_id: node.el.getAttribute('data-widget-id'),
+            x: node.x,
+            y: node.y,
+            width: node.w,
+            height: node.h
+        });
+    });
+    
+    fetch(`{% url 'dashboards:detail' dashboard.pk %}layout/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({layout: layout})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Layout saved!', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Save layout error:', error);
+    });
+}
+
+function exportDashboard() {
+    window.location.href = `{% url 'dashboards:detail' dashboard.pk %}export/`;
+}
+
+function shareDashboard() {
+    window.location.href = `{% url 'dashboards:share' dashboard.pk %}`;
+}
+
+function duplicateDashboard() {
+    if (confirm('Create a copy of this dashboard?')) {
+        fetch(`{% url 'dashboards:detail' dashboard.pk %}duplicate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Dashboard duplicated!', 'success');
+                window.location.href = `{% url 'dashboards:detail' 0 %}`.replace('0', data.dashboard_id);
+            } else {
+                showNotification('Error duplicating dashboard', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Duplicate error:', error);
+            showNotification('Error duplicating dashboard', 'error');
+        });
+    }
+}
+
+function saveAsTemplate() {
+    const name = prompt('Enter template name:');
+    if (name) {
+        fetch(`{% url 'dashboards:detail' dashboard.pk %}template/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({name: name})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Template saved!', 'success');
+            } else {
+                showNotification('Error saving template', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Save template error:', error);
+            showNotification('Error saving template', 'error');
+        });
+    }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'e':
+                e.preventDefault();
+                toggleEditMode();
+                break;
+            case 'r':
+                e.preventDefault();
+                refreshDashboard();
+                break;
+            case 'f':
+                e.preventDefault();
+                toggleFullscreen();
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}

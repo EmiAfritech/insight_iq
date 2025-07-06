@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete {{ report.title }} - Reports{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:list' %}">Reports</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:detail' report.pk %}">{{ report.title }}</a></li>
+        <li class="breadcrumb-item active">Delete</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Delete Report
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <strong>Warning:</strong> This action cannot be undone. All data associated with this report will be permanently deleted.
+                </div>
+                
+                <h5>You are about to delete:</h5>
+                <div class="bg-light p-3 rounded mb-3">
+                    <h6 class="mb-2">{{ report.title }}</h6>
+                    <p class="text-muted mb-2">{{ report.description|truncatewords:30 }}</p>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <strong>Format:</strong> {{ report.get_format_display }}
+                        </div>
+                        <div class="col-sm-6">
+                            <strong>Status:</strong> {{ report.get_status_display }}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-6">
+                            <strong>Created:</strong> {{ report.created_at|date:"M d, Y" }}
+                        </div>
+                        <div class="col-sm-6">
+                            <strong>Size:</strong> 
+                            {% if report.file_size %}
+                                {{ report.file_size|filesizeformat }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>This will also delete:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-chart-bar text-primary"></i> All associated charts and visualizations</li>
+                        <li><i class="fas fa-comments text-info"></i> All comments and annotations</li>
+                        <li><i class="fas fa-share text-success"></i> All sharing permissions</li>
+                        <li><i class="fas fa-download text-warning"></i> All export history</li>
+                        <li><i class="fas fa-file text-secondary"></i> All generated files</li>
+                    </ul>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                        <label class="form-check-label" for="confirmDelete">
+                            I understand this action is permanent and cannot be undone
+                        </label>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                            <i class="fas fa-trash"></i> Delete Report
+                        </button>
+                        <a href="{% url 'reports:detail' report.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Alternatives</h5>
+            </div>
+            <div class="card-body">
+                <p>Before deleting this report, consider these alternatives:</p>
+                
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Archive Report</h6>
+                        </div>
+                        <p class="mb-1">Keep the report but mark it as archived to reduce clutter.</p>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="archiveReport()">
+                            <i class="fas fa-archive"></i> Archive Instead
+                        </button>
+                    </div>
+                    
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Export Before Delete</h6>
+                        </div>
+                        <p class="mb-1">Download a copy of the report before deletion.</p>
+                        <a href="{% url 'reports:export' report.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download"></i> Export Report
+                        </a>
+                    </div>
+                    
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Share with Team</h6>
+                        </div>
+                        <p class="mb-1">Transfer ownership to another team member.</p>
+                        <a href="{% url 'reports:share' report.pk %}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-share"></i> Share Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('confirmDelete').addEventListener('change', function() {
+    document.getElementById('deleteBtn').disabled = !this.checked;
+});
+
+function archiveReport() {
+    if (confirm('Archive this report instead of deleting it?')) {
+        // TODO: Implement archive functionality
+        fetch(`{% url 'reports:detail' report.pk %}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                'status': 'archived'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Report archived successfully!', 'success');
+                window.location.href = '{% url "reports:list" %}';
+            } else {
+                showNotification('Error archiving report', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error archiving report', 'error');
+        });
+    }
+}
+</script>
+{% endblock %}

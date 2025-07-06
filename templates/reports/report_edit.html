@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit {{ report.title }} - Reports{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:list' %}">Reports</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:detail' report.pk %}">{{ report.title }}</a></li>
+        <li class="breadcrumb-item active">Edit</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-edit text-primary"></i>
+                    Edit Report
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.title.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.description.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.format.id_for_label }}" class="form-label">Format</label>
+                            {{ form.format }}
+                            {% if form.format.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.format.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.status.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.executive_summary.id_for_label }}" class="form-label">Executive Summary</label>
+                        {{ form.executive_summary }}
+                        {% if form.executive_summary.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.executive_summary.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.key_findings.id_for_label }}" class="form-label">Key Findings</label>
+                        {{ form.key_findings }}
+                        {% if form.key_findings.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.key_findings.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.recommendations.id_for_label }}" class="form-label">Recommendations</label>
+                        {{ form.recommendations }}
+                        {% if form.recommendations.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.recommendations.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.methodology.id_for_label }}" class="form-label">Methodology</label>
+                        {{ form.methodology }}
+                        {% if form.methodology.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.methodology.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.data_sources.id_for_label }}" class="form-label">Data Sources</label>
+                        {{ form.data_sources }}
+                        {% if form.data_sources.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.data_sources.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.charts_data.id_for_label }}" class="form-label">Charts Data (JSON)</label>
+                        {{ form.charts_data }}
+                        {% if form.charts_data.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.charts_data.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">JSON format for chart configurations</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+                        {{ form.tags }}
+                        {% if form.tags.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.tags.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Comma-separated tags</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                {{ form.is_public }}
+                                <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
+                                    Make this report public
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                {{ form.is_automated }}
+                                <label class="form-check-label" for="{{ form.is_automated.id_for_label }}">
+                                    Enable automated generation
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <a href="{% url 'reports:detail' report.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Report Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Created:</strong><br>
+                    {{ report.created_at|date:"M d, Y g:i A" }}
+                </div>
+                <div class="mb-3">
+                    <strong>Last Modified:</strong><br>
+                    {{ report.updated_at|date:"M d, Y g:i A" }}
+                </div>
+                <div class="mb-3">
+                    <strong>Generated:</strong><br>
+                    {% if report.generated_at %}
+                        {{ report.generated_at|date:"M d, Y g:i A" }}
+                    {% else %}
+                        Not generated yet
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <strong>Size:</strong><br>
+                    {% if report.file_size %}
+                        {{ report.file_size|filesizeformat }}
+                    {% else %}
+                        Not available
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'reports:export' report.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download"></i> Export Report
+                    </a>
+                    <a href="{% url 'reports:share' report.pk %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-share"></i> Share Report
+                    </a>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="previewReport()">
+                        <i class="fas fa-eye"></i> Preview Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewReport() {
+    // Get form data
+    const formData = new FormData(document.querySelector('form'));
+    
+    // Show loading state
+    const previewBtn = document.querySelector('[onclick="previewReport()"]');
+    const originalText = previewBtn.innerHTML;
+    previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    previewBtn.disabled = true;
+    
+    // TODO: Implement preview functionality
+    setTimeout(() => {
+        previewBtn.innerHTML = originalText;
+        previewBtn.disabled = false;
+        showNotification('Preview functionality coming soon!', 'info');
+    }, 1000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Report - InsightIQ{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item">
+        <a href="{% url 'reports:report_list' %}">Reports</a>
+    </li>
+    <li class="breadcrumb-item active">Create Report</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-plus me-2"></i>Create New Report
+    </h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">
+                                Title <span class="text-danger">*</span>
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.title.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.template.id_for_label }}" class="form-label">Template</label>
+                            {{ form.template }}
+                            {% if form.template.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.template.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Choose a template to pre-configure your report structure</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.format.id_for_label }}" class="form-label">Format</label>
+                            {{ form.format }}
+                            {% if form.format.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.format.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-database me-2"></i>Data Sources
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Dashboards</label>
+                            <div class="form-check-container" style="max-height: 200px; overflow-y: auto;">
+                                {% for choice in form.dashboards %}
+                                    <div class="form-check">
+                                        {{ choice.tag }}
+                                        <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                            {{ choice.choice_label }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.dashboards.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.dashboards.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Analyses</label>
+                            <div class="form-check-container" style="max-height: 200px; overflow-y: auto;">
+                                {% for choice in form.analyses %}
+                                    <div class="form-check">
+                                        {{ choice.tag }}
+                                        <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                            {{ choice.choice_label }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.analyses.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.analyses.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>Generation Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                {{ form.include_charts }}
+                                <label class="form-check-label" for="{{ form.include_charts.id_for_label }}">
+                                    Include Charts
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                {{ form.include_data_tables }}
+                                <label class="form-check-label" for="{{ form.include_data_tables.id_for_label }}">
+                                    Include Data Tables
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                {{ form.include_appendix }}
+                                <label class="form-check-label" for="{{ form.include_appendix.id_for_label }}">
+                                    Include Appendix
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar me-2"></i>Scheduling
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.is_scheduled }}
+                                <label class="form-check-label" for="{{ form.is_scheduled.id_for_label }}">
+                                    Enable Scheduling
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.is_public }}
+                                <label class="form-check-label" for="{{ form.is_public.id_for_label }}">
+                                    Make Public
+                                </label>
+                            </div>
+                            <div class="form-text">Public reports can be viewed by anyone with the link</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row scheduling-options" style="display: none;">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.schedule_frequency.id_for_label }}" class="form-label">Frequency</label>
+                            {{ form.schedule_frequency }}
+                            {% if form.schedule_frequency.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.schedule_frequency.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.next_generation.id_for_label }}" class="form-label">Next Generation</label>
+                            {{ form.next_generation }}
+                            {% if form.next_generation.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.next_generation.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>Content
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.executive_summary.id_for_label }}" class="form-label">Executive Summary</label>
+                            {{ form.executive_summary }}
+                            {% if form.executive_summary.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.executive_summary.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.recommendations.id_for_label }}" class="form-label">Recommendations</label>
+                            {{ form.recommendations }}
+                            {% if form.recommendations.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.recommendations.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-play me-2"></i>Generation Options
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check">
+                        {{ form.generate_now }}
+                        <label class="form-check-label" for="{{ form.generate_now.id_for_label }}">
+                            Generate report immediately after creation
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        If unchecked, you can generate the report later from the report detail page
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Create Report
+                </button>
+                <a href="{% url 'reports:report_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>
+                        <strong>Templates:</strong> Use templates to quickly set up common report structures
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-database text-info me-2"></i>
+                        <strong>Data Sources:</strong> Select at least one dashboard or analysis to include data in your report
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-chart-line text-success me-2"></i>
+                        <strong>Charts:</strong> Visual charts help make your reports more engaging
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        <strong>Scheduling:</strong> Set up automatic report generation to save time
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-share text-secondary me-2"></i>
+                        <strong>Sharing:</strong> You can share reports with team members after creation
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-question-circle me-2"></i>Need Help?
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Check out our documentation for detailed guides on creating effective reports.</p>
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-book me-2"></i>Documentation
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-video me-2"></i>Video Tutorials
+                    </a>
+                    <a href="#" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-envelope me-2"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle scheduling options
+    document.getElementById('id_is_scheduled').addEventListener('change', function() {
+        const schedulingOptions = document.querySelector('.scheduling-options');
+        if (this.checked) {
+            schedulingOptions.style.display = 'block';
+        } else {
+            schedulingOptions.style.display = 'none';
+        }
+    });
+    
+    // Form validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.needs-validation');
+        
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            form.classList.add('was-validated');
+        }, false);
+    });
+    
+    // Data source validation
+    function validateDataSources() {
+        const dashboards = document.querySelectorAll('input[name="dashboards"]:checked');
+        const analyses = document.querySelectorAll('input[name="analyses"]:checked');
+        
+        if (dashboards.length === 0 && analyses.length === 0) {
+            alert('Please select at least one dashboard or analysis as a data source.');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Add validation to form submission
+    document.querySelector('.needs-validation').addEventListener('submit', function(e) {
+        if (!validateDataSources()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+</script>
+{% endblock %}

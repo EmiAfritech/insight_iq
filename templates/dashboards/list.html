@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboards{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Dashboards</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-tachometer-alt text-primary"></i>
+                Dashboards
+            </h2>
+            <div>
+                <a href="{% url 'dashboards:create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Filters</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" id="filterForm">
+                    <div class="mb-3">
+                        <label for="search" class="form-label">Search</label>
+                        <input type="text" class="form-control" name="search" id="search" 
+                               value="{{ request.GET.search }}" placeholder="Search dashboards...">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <select class="form-select" name="category" id="category">
+                            <option value="">All Categories</option>
+                            <option value="overview" {% if request.GET.category == 'overview' %}selected{% endif %}>Overview</option>
+                            <option value="financial" {% if request.GET.category == 'financial' %}selected{% endif %}>Financial</option>
+                            <option value="marketing" {% if request.GET.category == 'marketing' %}selected{% endif %}>Marketing</option>
+                            <option value="operations" {% if request.GET.category == 'operations' %}selected{% endif %}>Operations</option>
+                            <option value="hr" {% if request.GET.category == 'hr' %}selected{% endif %}>HR</option>
+                            <option value="sales" {% if request.GET.category == 'sales' %}selected{% endif %}>Sales</option>
+                            <option value="custom" {% if request.GET.category == 'custom' %}selected{% endif %}>Custom</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="layout" class="form-label">Layout</label>
+                        <select class="form-select" name="layout" id="layout">
+                            <option value="">All Layouts</option>
+                            <option value="grid" {% if request.GET.layout == 'grid' %}selected{% endif %}>Grid</option>
+                            <option value="list" {% if request.GET.layout == 'list' %}selected{% endif %}>List</option>
+                            <option value="kanban" {% if request.GET.layout == 'kanban' %}selected{% endif %}>Kanban</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="created_by" class="form-label">Created By</label>
+                        <select class="form-select" name="created_by" id="created_by">
+                            <option value="">Anyone</option>
+                            <option value="me" {% if request.GET.created_by == 'me' %}selected{% endif %}>Me</option>
+                            <option value="team" {% if request.GET.created_by == 'team' %}selected{% endif %}>Team</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <a href="{% url 'dashboards:list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title">Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-12 mb-3">
+                        <div class="h4 text-primary">{{ stats.total_dashboards }}</div>
+                        <div class="text-muted">Total</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 text-success">{{ stats.active_dashboards }}</div>
+                        <div class="text-muted small">Active</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 text-info">{{ stats.shared_dashboards }}</div>
+                        <div class="text-muted small">Shared</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="row">
+            {% for dashboard in dashboards %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title">
+                                <a href="{% url 'dashboards:detail' dashboard.pk %}" class="text-decoration-none">
+                                    {{ dashboard.name }}
+                                </a>
+                            </h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'dashboards:detail' dashboard.pk %}">
+                                        <i class="fas fa-eye"></i> View
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'dashboards:edit' dashboard.pk %}">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="duplicateDashboard('{{ dashboard.pk }}')">
+                                        <i class="fas fa-copy"></i> Duplicate
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'dashboards:share' dashboard.pk %}">
+                                        <i class="fas fa-share"></i> Share
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="{% url 'dashboards:delete' dashboard.pk %}">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <p class="card-text text-muted">{{ dashboard.description|truncatewords:15 }}</p>
+                        
+                        <div class="mb-3">
+                            <span class="badge bg-primary">{{ dashboard.get_category_display }}</span>
+                            <span class="badge bg-secondary">{{ dashboard.get_layout_display }}</span>
+                            {% if dashboard.is_default %}
+                                <span class="badge bg-success">Default</span>
+                            {% endif %}
+                            {% if dashboard.is_public %}
+                                <span class="badge bg-warning">Public</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="text-primary">{{ dashboard.widgets.count }}</div>
+                                <div class="text-muted small">Widgets</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-success">{{ dashboard.views|default:0 }}</div>
+                                <div class="text-muted small">Views</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-info">{{ dashboard.shares.count }}</div>
+                                <div class="text-muted small">Shares</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                By {{ dashboard.created_by.get_full_name }}
+                            </small>
+                            <small class="text-muted">
+                                {{ dashboard.updated_at|date:"M d, Y" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-tachometer-alt fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No dashboards found</h4>
+                    <p class="text-muted">Create your first dashboard to get started with data visualization.</p>
+                    <a href="{% url 'dashboards:create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Dashboard
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if dashboards.has_other_pages %}
+        <nav aria-label="Dashboard pagination">
+            <ul class="pagination justify-content-center">
+                {% if dashboards.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ dashboards.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.layout %}&layout={{ request.GET.layout }}{% endif %}{% if request.GET.created_by %}&created_by={{ request.GET.created_by }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in dashboards.paginator.page_range %}
+                    {% if dashboards.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.layout %}&layout={{ request.GET.layout }}{% endif %}{% if request.GET.created_by %}&created_by={{ request.GET.created_by }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if dashboards.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ dashboards.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.layout %}&layout={{ request.GET.layout }}{% endif %}{% if request.GET.created_by %}&created_by={{ request.GET.created_by }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function duplicateDashboard(dashboardId) {
+    if (confirm('Create a copy of this dashboard?')) {
+        fetch(`/api/v1/dashboards/${dashboardId}/duplicate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Dashboard duplicated successfully!', 'success');
+                window.location.reload();
+            } else {
+                showNotification('Error duplicating dashboard', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Duplicate error:', error);
+            showNotification('Error duplicating dashboard', 'error');
+        });
+    }
+}
+
+// Auto-submit form on filter change
+document.getElementById('filterForm').addEventListener('change', function() {
+    this.submit();
+});
+
+// Search input delay
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        this.form.submit();
+    }, 500);
+});
+</script>
+{% endblock %}

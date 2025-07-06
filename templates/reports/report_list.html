@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - InsightIQ{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item active">Reports</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-file-alt me-2"></i>Reports
+    </h1>
+    <div class="action-buttons">
+        <a href="{% url 'reports:template_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-template me-2"></i>Templates
+        </a>
+        <a href="{% url 'reports:report_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>New Report
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter Form -->
+<div class="search-form">
+    <form method="get" class="row g-3">
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" placeholder="Search reports..." value="{{ search_query }}">
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">All Status</option>
+                {% for key, value in status_choices %}
+                    <option value="{{ key }}" {% if key == current_status %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="format" class="form-select">
+                <option value="">All Formats</option>
+                {% for key, value in format_choices %}
+                    <option value="{{ key }}" {% if key == current_format %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-search me-2"></i>Search
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Reports List -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list me-2"></i>Your Reports
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if reports %}
+            <div class="table-responsive">
+                <table class="table table-hover data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Format</th>
+                            <th>Created</th>
+                            <th>Generated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            {% if report.status == 'completed' %}
+                                                <i class="fas fa-check-circle text-success"></i>
+                                            {% elif report.status == 'generating' %}
+                                                <i class="fas fa-spinner fa-spin text-primary"></i>
+                                            {% elif report.status == 'failed' %}
+                                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                                            {% elif report.status == 'scheduled' %}
+                                                <i class="fas fa-clock text-info"></i>
+                                            {% else %}
+                                                <i class="fas fa-file-alt text-secondary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <a href="{% url 'reports:report_detail' report.id %}" class="text-decoration-none">
+                                                <strong>{{ report.title }}</strong>
+                                            </a>
+                                            {% if report.description %}
+                                                <br><small class="text-muted">{{ report.description|truncatechars:50 }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if report.status == 'completed' %}success{% elif report.status == 'generating' %}primary{% elif report.status == 'failed' %}danger{% elif report.status == 'scheduled' %}info{% else %}secondary{% endif %}">
+                                        {{ report.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        {{ report.get_format_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ report.created_at|date:"M j, Y" }}</small>
+                                    <br><small class="text-muted">by {{ report.created_by.username }}</small>
+                                </td>
+                                <td>
+                                    {% if report.generated_at %}
+                                        <small>{{ report.generated_at|date:"M j, Y H:i" }}</small>
+                                    {% else %}
+                                        <small class="text-muted">Not generated</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'reports:report_detail' report.id %}" class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'reports:report_edit' report.id %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if report.status == 'completed' %}
+                                            <a href="{% url 'reports:report_export' report.id %}" class="btn btn-sm btn-outline-success" title="Export">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if report.status in 'draft,completed' %}
+                                            <button type="button" class="btn btn-sm btn-outline-info" title="Generate" onclick="generateReport('{{ report.id }}')">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-sm btn-outline-primary" title="Share" onclick="shareReport('{{ report.id }}')">
+                                            <i class="fas fa-share"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_format %}&format={{ current_format }}{% endif %}">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_format %}&format={{ current_format }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_format %}&format={{ current_format }}{% endif %}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_format %}&format={{ current_format }}{% endif %}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-alt text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 text-muted">No reports found</h4>
+                <p class="text-muted">Get started by creating your first report</p>
+                <a href="{% url 'reports:report_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create Report
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shareForm">
+                    <div class="mb-3">
+                        <label for="shareEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="shareEmail" name="shared_with_email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="shareMessage" class="form-label">Message (Optional)</label>
+                        <textarea class="form-control" id="shareMessage" name="message" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="shareAccess" class="form-label">Access Level</label>
+                        <select class="form-select" id="shareAccess" name="access_level">
+                            <option value="view">View Only</option>
+                            <option value="download">View & Download</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="shareExpires" class="form-label">Expires At (Optional)</label>
+                        <input type="datetime-local" class="form-control" id="shareExpires" name="expires_at">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitShare()">Share Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentReportId = null;
+    
+    function generateReport(reportId) {
+        if (!confirm('Are you sure you want to generate this report?')) {
+            return;
+        }
+        
+        showLoading();
+        
+        fetch(`/reports/${reportId}/generate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('Error generating report: ' + data.message);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Error:', error);
+            alert('Error generating report');
+        });
+    }
+    
+    function shareReport(reportId) {
+        currentReportId = reportId;
+        const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+        modal.show();
+    }
+    
+    function submitShare() {
+        if (!currentReportId) return;
+        
+        const form = document.getElementById('shareForm');
+        const formData = new FormData(form);
+        
+        fetch(`/reports/${currentReportId}/share/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+                alert('Report shared successfully!');
+                form.reset();
+            } else {
+                alert('Error sharing report: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error sharing report');
+        });
+    }
+    
+    // Auto-refresh for generating reports
+    setInterval(function() {
+        const generatingRows = document.querySelectorAll('.fa-spinner');
+        if (generatingRows.length > 0) {
+            location.reload();
+        }
+    }, 30000); // Check every 30 seconds
+</script>
+{% endblock %}

@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Share {{ report.title }} - Reports{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:list' %}">Reports</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:detail' report.pk %}">{{ report.title }}</a></li>
+        <li class="breadcrumb-item active">Share</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-share text-primary"></i>
+                    Share Report
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Report Information</h5>
+                        <div class="bg-light p-3 rounded mb-3">
+                            <h6 class="mb-2">{{ report.title }}</h6>
+                            <p class="text-muted mb-2">{{ report.description|truncatewords:20 }}</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Format:</strong> {{ report.get_format_display }}
+                                </div>
+                                <div class="col-6">
+                                    <strong>Status:</strong> {{ report.get_status_display }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>Share Options</h5>
+                        <form id="shareForm" method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="share_type" class="form-label">Share Type</label>
+                                <select class="form-select" name="share_type" id="share_type" onchange="toggleShareOptions()">
+                                    <option value="internal">Internal Team Members</option>
+                                    <option value="external">External Users</option>
+                                    <option value="public">Public Link</option>
+                                </select>
+                            </div>
+                            
+                            <div id="internal_options" class="share-options">
+                                <div class="mb-3">
+                                    <label for="team_members" class="form-label">Team Members</label>
+                                    <select class="form-select" name="team_members" id="team_members" multiple>
+                                        {% for user in team_members %}
+                                        <option value="{{ user.id }}">{{ user.get_full_name }} ({{ user.email }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">Select team members to share with</div>
+                                </div>
+                            </div>
+                            
+                            <div id="external_options" class="share-options" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="external_emails" class="form-label">Email Addresses</label>
+                                    <textarea class="form-control" name="external_emails" id="external_emails" rows="3" 
+                                              placeholder="Enter email addresses separated by commas"></textarea>
+                                    <div class="form-text">External users will receive an invitation email</div>
+                                </div>
+                            </div>
+                            
+                            <div id="public_options" class="share-options" style="display: none;">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Warning:</strong> Anyone with the link will be able to view this report.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Permissions</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="permission" id="view_only" value="view" checked>
+                                    <label class="form-check-label" for="view_only">
+                                        <i class="fas fa-eye text-info"></i> View Only
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="permission" id="comment" value="comment">
+                                    <label class="form-check-label" for="comment">
+                                        <i class="fas fa-comment text-warning"></i> View & Comment
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="permission" id="edit" value="edit">
+                                    <label class="form-check-label" for="edit">
+                                        <i class="fas fa-edit text-success"></i> View & Edit
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="expiry_date" class="form-label">Expiry Date (Optional)</label>
+                                <input type="date" class="form-control" name="expiry_date" id="expiry_date">
+                                <div class="form-text">Leave empty for no expiry</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Message (Optional)</label>
+                                <textarea class="form-control" name="message" id="message" rows="3" 
+                                          placeholder="Add a personal message to include in the share notification"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="notify" id="notify" checked>
+                                    <label class="form-check-label" for="notify">
+                                        Send email notification to recipients
+                                    </label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary" onclick="shareReport()">
+                                <i class="fas fa-share"></i> Share Report
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="copyLink()">
+                                <i class="fas fa-copy"></i> Copy Link
+                            </button>
+                            <a href="{% url 'reports:detail' report.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Current Shares</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for share in current_shares %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">
+                                {% if share.shared_with %}
+                                    {{ share.shared_with.get_full_name }}
+                                {% else %}
+                                    {{ share.shared_email }}
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted">
+                                {{ share.get_permission_display }} • 
+                                Shared {{ share.created_at|timesince }} ago
+                            </small>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editShare('{{ share.id }}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="revokeShare('{{ share.id }}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No shares yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title">Share Analytics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h3 text-primary">{{ share_stats.total_shares }}</div>
+                        <div class="text-muted">Total Shares</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h3 text-success">{{ share_stats.active_shares }}</div>
+                        <div class="text-muted">Active</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h3 text-info">{{ share_stats.views }}</div>
+                        <div class="text-muted">Views</div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between">
+                        <span>Internal</span>
+                        <span>{{ share_stats.internal_shares }}</span>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between">
+                        <span>External</span>
+                        <span>{{ share_stats.external_shares }}</span>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between">
+                        <span>Public</span>
+                        <span>{{ share_stats.public_shares }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title">Share Tips</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        Use expiry dates for temporary access
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        Add context with personal messages
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        Review permissions regularly
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        Monitor share analytics
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleShareOptions() {
+    const shareType = document.getElementById('share_type').value;
+    const options = document.querySelectorAll('.share-options');
+    
+    options.forEach(option => {
+        option.style.display = 'none';
+    });
+    
+    document.getElementById(shareType + '_options').style.display = 'block';
+}
+
+function shareReport() {
+    const formData = new FormData(document.getElementById('shareForm'));
+    
+    fetch('{% url "reports:share" report.pk %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Report shared successfully!', 'success');
+            // Refresh the page to show new shares
+            window.location.reload();
+        } else {
+            showNotification('Error sharing report: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Share error:', error);
+        showNotification('Error sharing report', 'error');
+    });
+}
+
+function copyLink() {
+    const shareType = document.getElementById('share_type').value;
+    
+    if (shareType === 'public') {
+        // Generate public link
+        const publicLink = `${window.location.origin}{% url 'reports:public_view' report.pk %}`;
+        navigator.clipboard.writeText(publicLink).then(() => {
+            showNotification('Public link copied to clipboard!', 'success');
+        });
+    } else {
+        showNotification('Please select "Public Link" to copy a shareable link', 'info');
+    }
+}
+
+function editShare(shareId) {
+    // TODO: Implement edit share functionality
+    showNotification('Edit share functionality coming soon!', 'info');
+}
+
+function revokeShare(shareId) {
+    if (confirm('Are you sure you want to revoke this share?')) {
+        fetch(`/api/v1/reports/shares/${shareId}/revoke/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Share revoked successfully!', 'success');
+                window.location.reload();
+            } else {
+                showNotification('Error revoking share', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Revoke error:', error);
+            showNotification('Error revoking share', 'error');
+        });
+    }
+}
+
+// Initialize multi-select for team members
+document.addEventListener('DOMContentLoaded', function() {
+    const teamMembersSelect = document.getElementById('team_members');
+    if (teamMembersSelect) {
+        // Simple multi-select enhancement
+        teamMembersSelect.addEventListener('change', function() {
+            const selectedCount = this.selectedOptions.length;
+            const label = this.nextElementSibling;
+            if (selectedCount > 0) {
+                label.textContent = `${selectedCount} team member(s) selected`;
+            } else {
+                label.textContent = 'Select team members to share with';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
