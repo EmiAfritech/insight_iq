@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode;}> = ({ children 
       const isId = /^\d{8}$/.test(nameOrId);
 
       const { data, error } = await supabase.
-      from('users').
+      from('app_users').
       select('*').
       eq(isId ? 'user_id' : 'name', nameOrId).
       single();
@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode;}> = ({ children 
 
       // Check if user ID already exists (very unlikely but safe)
       const { data: existingUser } = await supabase.
-      from('users').
+      from('app_users').
       select('user_id').
       eq('user_id', userId).
       single();
@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode;}> = ({ children 
       }
 
       const { data, error } = await supabase.
-      from('users').
+      from('app_users').
       insert([
       {
         user_id: userId,
@@ -128,7 +128,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode;}> = ({ children 
       const newUserId = generateUserId();
 
       const { data, error } = await supabase.
-      from('users').
+      from('app_users').
       update({ user_id: newUserId }).
       eq('id', user.id).
       select().

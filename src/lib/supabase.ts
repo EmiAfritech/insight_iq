@@ -8,7 +8,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export type Database = {
   public: {
     Tables: {
-      users: {
+      app_users: {
         Row: {
           id: string;
           user_id: string;

@@ -1,0 +1,24 @@
+
+services:
+  deepseek-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEEPSEEK_API_KEY=827092c7e3ce600a84766400fc13a523e7c8524d8f6ab268bdb52716c75f2a98
+    volumes:
+      - ./models:/app/models  # Cache downloaded models
+      - ./logs:/app/logs      # Store logs
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 28G  # Leave some memory for system
+        reservations:
+          memory: 20G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

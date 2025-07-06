@@ -1,3 +1,407 @@
+// import React, { useState, useCallback } from 'react';
+// import { useDropzone } from 'react-dropzone';
+// import { useAuth } from '@/contexts/AuthContext';
+// import { Button } from '@/components/ui/button';
+// import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+// import { Input } from '@/components/ui/input';
+// import { Label } from '@/components/ui/label';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// import { Progress } from '@/components/ui/progress';
+// import { supabase } from '@/lib/supabase';
+// import { analyzeDataWithAI } from '@/lib/openrouter';
+// import { toast } from 'sonner';
+// import { Upload, File, Database, Loader2, AlertTriangle } from 'lucide-react';
+// import Papa from 'papaparse';
+// import * as XLSX from 'xlsx';
+
+// interface FileUploadProps {
+//   onUploadComplete?: () => void;
+// }
+
+// const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
+//   const { user } = useAuth();
+//   const [uploading, setUploading] = useState(false);
+//   const [analyzing, setAnalyzing] = useState(false);
+//   const [uploadProgress, setUploadProgress] = useState(0);
+//   const [preview, setPreview] = useState<any[]>([]);
+//   const [dbConnection, setDbConnection] = useState({
+//     host: process.env.POSTGRES_HOST || '',
+//     port: process.env.POSTGRES_PORT || '5432',
+//     database: process.env.POSTGRES_DB || '',
+//     username: process.env.POSTGRES_USER || '',
+//     password: '',
+//     table: ''
+//   });
+
+//   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+//     const file = acceptedFiles[0];
+//     if (!file || !user?.user_id) {
+//       toast.error('No file selected or user not authenticated');
+//       return;
+//     }
+
+//     // Validate file
+//     const validTypes = [
+//       'text/csv',
+//       'application/vnd.ms-excel',
+//       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+//     ];
+//     const maxSize = 10 * 1024 * 1024; // 10MB
+
+//     if (!validTypes.includes(file.type) && !/\.(csv|xlsx|xls)$/i.test(file.name)) {
+//       toast.error('Only CSV and Excel files are allowed');
+//       return;
+//     }
+
+//     if (file.size > maxSize) {
+//       toast.error('File size exceeds 10MB limit');
+//       return;
+//     }
+
+//     setUploading(true);
+//     setUploadProgress(0);
+
+//     try {
+//       // Parse file
+//       const fileText = await new Promise<string>((resolve, reject) => {
+//         const reader = new FileReader();
+//         reader.onload = (e) => resolve(e.target?.result as string);
+//         reader.onerror = reject;
+//         file.name.toLowerCase().endsWith('.csv') ? reader.readAsText(file) : reader.readAsBinaryString(file);
+//       });
+
+//       let parsedData: any[] = [];
+//       if (file.name.toLowerCase().endsWith('.csv')) {
+//         parsedData = Papa.parse(fileText, { header: true, skipEmptyLines: true }).data;
+//       } else {
+//         const workbook = XLSX.read(fileText, { type: 'binary' });
+//         parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+//       }
+
+//       setPreview(parsedData.slice(0, 5));
+//       setUploadProgress(30);
+
+//       // Upload to storage
+//       const fileName = `${user.user_id}/${Date.now()}_${file.name}`;
+//       const { error: uploadError } = await supabase.storage
+//         .from('uploads')
+//         .upload(fileName, file, {
+//           cacheControl: '3600',
+//           upsert: false,
+//         });
+
+//       if (uploadError) throw uploadError;
+//       setUploadProgress(70);
+
+//       // Save to database via API (bypasses RLS)
+//       const response = await fetch('/src/api/save-file-metadata.ts', {
+//         method: 'POST',
+//         headers: { 
+//           'Content-Type': 'application/json',
+//           'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+//         },
+//         body: JSON.stringify({
+//           user_id: user.user_id,
+//           file_name: file.name,
+//           file_path: fileName,
+//           file_type: file.type,
+//           file_size: file.size,
+//         }),
+//       });
+
+//       if (!response.ok) throw new Error(await response.text());
+//       const fileRecord = await response.json();
+//       setUploadProgress(90);
+
+//       // AI analysis using your openrouter.ts
+//       setAnalyzing(true);
+//       const analysis = await analyzeDataWithAI(
+//         Papa.unparse(parsedData.slice(0, 100)), 
+//         file.name
+//       );
+
+//       // Update with analysis
+//       const updateResponse = await fetch('src/api/update-file-analysis', {
+//         method: 'POST',
+//         headers: { 
+//           'Content-Type': 'application/json',
+//           'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+//         },
+//         body: JSON.stringify({
+//           file_id: fileRecord.id,
+//           analysis_results: analysis,
+//         }),
+//       });
+
+//       if (!updateResponse.ok) throw new Error(await updateResponse.text());
+
+//       setUploadProgress(100);
+//       toast.success('File processed successfully!');
+//       onUploadComplete?.();
+//     } catch (error: any) {
+//       console.error('Upload error:', error);
+//       toast.error(error.message || 'File processing failed');
+//     } finally {
+//       setUploading(false);
+//       setAnalyzing(false);
+//     }
+//   }, [user, onUploadComplete]);
+
+//   const connectDatabase = async () => {
+//     const requiredFields = ['host', 'database', 'username', 'table'];
+//     const missingFields = requiredFields.filter(field => !dbConnection[field as keyof typeof dbConnection]);
+
+//     if (missingFields.length > 0 || !user?.user_id) {
+//       toast.error(`Missing required fields: ${missingFields.join(', ')}`);
+//       return;
+//     }
+
+//     setUploading(true);
+
+//     try {
+//       const response = await fetch('src/api/connect-database', {
+//         method: 'POST',
+//         headers: { 
+//           'Content-Type': 'application/json',
+//           'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+//         },
+//         body: JSON.stringify({
+//           ...dbConnection,
+//           user_id: user.user_id,
+//         }),
+//       });
+
+//       if (!response.ok) throw new Error(await response.text());
+//       const result = await response.json();
+
+//       toast.success('Database connected successfully!');
+//       setPreview(result.sampleData || []);
+//       onUploadComplete?.();
+//     } catch (error: any) {
+//       console.error('Database error:', error);
+//       toast.error(error.message || 'Database connection failed');
+//     } finally {
+//       setUploading(false);
+//     }
+//   };
+
+//   const { getRootProps, getInputProps, isDragActive } = useDropzone({
+//     onDrop,
+//     accept: {
+//       'text/csv': ['.csv'],
+//       'application/vnd.ms-excel': ['.xls'],
+//       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+//     },
+//     multiple: false,
+//     disabled: uploading,
+//     maxSize: 10 * 1024 * 1024,
+//   });
+
+//   return (
+//     <div className="p-6 space-y-6">
+//       <div>
+//         <h1 className="text-3xl font-bold">Upload Data</h1>
+//         <p className="text-muted-foreground mt-1">
+//           Upload CSV/Excel files or connect to databases for analysis
+//         </p>
+//       </div>
+
+//       <Tabs defaultValue="file" className="space-y-6">
+//         <TabsList>
+//           <TabsTrigger value="file">File Upload</TabsTrigger>
+//           <TabsTrigger value="database">Database Connection</TabsTrigger>
+//         </TabsList>
+
+//         <TabsContent value="file" className="space-y-6">
+//           <Card>
+//             <CardHeader>
+//               <CardTitle className="flex items-center space-x-2">
+//                 <Upload className="w-5 h-5" />
+//                 <span>File Upload</span>
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div
+//                 {...getRootProps()}
+//                 className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
+//                   isDragActive
+//                     ? 'border-primary bg-primary/5'
+//                     : 'border-muted-foreground/25 hover:border-primary/50'
+//                 } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+//               >
+//                 <input {...getInputProps()} />
+//                 <div className="space-y-4">
+//                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+//                     {uploading ? (
+//                       <Loader2 className="w-8 h-8 text-primary animate-spin" />
+//                     ) : (
+//                       <File className="w-8 h-8 text-primary" />
+//                     )}
+//                   </div>
+
+//                   {uploading ? (
+//                     <div className="space-y-2">
+//                       <p className="text-lg font-medium">
+//                         {analyzing ? 'Analyzing with AI...' : 'Uploading...'}
+//                       </p>
+//                       <Progress
+//                         value={uploadProgress}
+//                         className="w-64 mx-auto"
+//                       />
+//                       <p className="text-sm text-muted-foreground">
+//                         {uploadProgress}% complete
+//                       </p>
+//                     </div>
+//                   ) : isDragActive ? (
+//                     <p className="text-lg font-medium">Drop your file here...</p>
+//                   ) : (
+//                     <div className="space-y-2">
+//                       <p className="text-lg font-medium">
+//                         Drag & drop files here, or click to select
+//                       </p>
+//                       <p className="text-muted-foreground">
+//                         Supports CSV, Excel (.xlsx, .xls) files (Max 10MB)
+//                       </p>
+//                     </div>
+//                   )}
+//                 </div>
+//               </div>
+
+//               {preview.length > 0 && (
+//                 <div className="mt-6">
+//                   <h3 className="text-lg font-medium mb-3">Data Preview</h3>
+//                   <div className="border rounded-lg overflow-auto max-h-64">
+//                     <table className="w-full text-sm">
+//                       <thead className="bg-muted">
+//                         <tr>
+//                           {Object.keys(preview[0]).map((header) => (
+//                             <th key={header} className="p-2 text-left font-medium">
+//                               {header}
+//                             </th>
+//                           ))}
+//                         </tr>
+//                       </thead>
+//                       <tbody>
+//                         {preview.map((row, index) => (
+//                           <tr key={index} className="border-t">
+//                             {Object.values(row).map((value: any, cellIndex) => (
+//                               <td key={cellIndex} className="p-2">
+//                                 {String(value || '').slice(0, 50)}
+//                                 {String(value || '').length > 50 ? '...' : ''}
+//                               </td>
+//                             ))}
+//                           </tr>
+//                         ))}
+//                       </tbody>
+//                     </table>
+//                   </div>
+//                 </div>
+//               )}
+//             </CardContent>
+//           </Card>
+//         </TabsContent>
+
+//         <TabsContent value="database" className="space-y-6">
+//           <Card>
+//             <CardHeader>
+//               <CardTitle className="flex items-center space-x-2">
+//                 <Database className="w-5 h-5" />
+//                 <span>Database Connection</span>
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent className="space-y-4">
+//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                 <div className="space-y-2">
+//                   <Label htmlFor="host">Host *</Label>
+//                   <Input
+//                     id="host"
+//                     value={dbConnection.host}
+//                     onChange={(e) => setDbConnection(p => ({ ...p, host: e.target.value }))}
+//                   />
+//                 </div>
+//                 <div className="space-y-2">
+//                   <Label htmlFor="port">Port *</Label>
+//                   <Input
+//                     id="port"
+//                     value={dbConnection.port}
+//                     onChange={(e) => setDbConnection(p => ({ ...p, port: e.target.value }))}
+//                   />
+//                 </div>
+//                 <div className="space-y-2">
+//                   <Label htmlFor="database">Database *</Label>
+//                   <Input
+//                     id="database"
+//                     value={dbConnection.database}
+//                     onChange={(e) => setDbConnection(p => ({ ...p, database: e.target.value }))}
+//                   />
+//                 </div>
+//                 <div className="space-y-2">
+//                   <Label htmlFor="username">Username *</Label>
+//                   <Input
+//                     id="username"
+//                     value={dbConnection.username}
+//                     onChange={(e) => setDbConnection(p => ({ ...p, username: e.target.value }))}
+//                   />
+//                 </div>
+//                 <div className="space-y-2">
+//                   <Label htmlFor="password">Password *</Label>
+//                   <Input
+//                     id="password"
+//                     type="password"
+//                     value={dbConnection.password}
+//                     onChange={(e) => setDbConnection(p => ({ ...p, password: e.target.value }))}
+//                   />
+//                 </div>
+//                 <div className="space-y-2">
+//                   <Label htmlFor="table">Table Name *</Label>
+//                   <Input
+//                     id="table"
+//                     value={dbConnection.table}
+//                     onChange={(e) => setDbConnection(p => ({ ...p, table: e.target.value }))}
+//                   />
+//                 </div>
+//               </div>
+
+//               <div className="flex items-start space-x-2 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+//                 <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+//                 <div className="text-sm">
+//                   <p className="font-medium text-yellow-800 dark:text-yellow-200">
+//                     Database Connection Notice
+//                   </p>
+//                   <p className="text-yellow-700 dark:text-yellow-300">
+//                     Credentials are encrypted and only used for this session.
+//                   </p>
+//                 </div>
+//               </div>
+
+//               <Button
+//                 onClick={connectDatabase}
+//                 disabled={uploading}
+//                 className="w-full"
+//               >
+//                 {uploading ? (
+//                   <>
+//                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+//                     Connecting...
+//                   </>
+//                 ) : (
+//                   <>
+//                     <Database className="w-4 h-4 mr-2" />
+//                     Connect & Import Data
+//                   </>
+//                 )}
+//               </Button>
+//             </CardContent>
+//           </Card>
+//         </TabsContent>
+//       </Tabs>
+//     </div>
+//   );
+// };
+
+// export default FileUpload;
+
+
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,16 +412,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/lib/supabase';
-import { analyzeDataWithAI } from '@/lib/openrouter';
 import { toast } from 'sonner';
-import {
-  Upload,
-  File,
-  Database,
-  CheckCircle,
-  Loader2,
-  AlertTriangle } from
-'lucide-react';
+import { Upload, File, Database, Loader2, AlertTriangle } from 'lucide-react';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
@@ -32,22 +428,36 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [preview, setPreview] = useState<any[]>([]);
   const [dbConnection, setDbConnection] = useState({
-    host: '',
-    port: '5432',
-    database: '',
-    username: '',
+    host: process.env.POSTGRES_HOST || '',
+    port: process.env.POSTGRES_PORT || '5432',
+    database: process.env.POSTGRES_DB || '',
+    username: process.env.POSTGRES_USER || '',
     password: '',
     table: ''
   });
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
-    if (!file) return;
+    if (!file || !user?.user_id) {
+      toast.error('No file selected or user not authenticated');
+      return;
+    }
 
-    // Validate file type
-    const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-    if (!validTypes.includes(file.type) && !file.name.toLowerCase().match(/\.(csv|xlsx|xls)$/)) {
-      toast.error('Please upload CSV or Excel files only');
+    // Validate file
+    const validTypes = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    if (!validTypes.includes(file.type) && !/\.(csv|xlsx|xls)$/i.test(file.name)) {
+      toast.error('Only CSV and Excel files are allowed');
+      return;
+    }
+
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 10MB limit');
       return;
     }
 
@@ -55,100 +465,102 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
     setUploadProgress(0);
 
     try {
-      // Read and parse file for preview
-      const fileText = await readFileAsText(file);
-      let parsedData: any[] = [];
+      // Parse file
+      const fileText = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        file.name.toLowerCase().endsWith('.csv') ? reader.readAsText(file) : reader.readAsBinaryString(file);
+      });
 
+      let parsedData: any[] = [];
       if (file.name.toLowerCase().endsWith('.csv')) {
         parsedData = Papa.parse(fileText, { header: true, skipEmptyLines: true }).data;
       } else {
-        // Handle Excel files
         const workbook = XLSX.read(fileText, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        parsedData = XLSX.utils.sheet_to_json(sheet);
+        parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
       }
 
-      setPreview(parsedData.slice(0, 5)); // Show first 5 rows
-      setUploadProgress(50);
+      setPreview(parsedData.slice(0, 5));
+      setUploadProgress(30);
 
-      // Upload to Supabase Storage
-      const fileName = `${user?.user_id}/${Date.now()}_${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage.
-      from('data-files').
-      upload(fileName, file);
+      // Upload to storage only - no database operations
+      const fileName = `${user.user_id}/${Date.now()}_${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('uploads')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
 
       if (uploadError) {
-        throw uploadError;
-      }
-
-      setUploadProgress(75);
-
-      // Save file metadata to database
-      const { data: fileRecord, error: dbError } = await supabase.
-      from('file_uploads').
-      insert([
-      {
-        user_id: user?.user_id,
-        file_name: file.name,
-        file_path: fileName,
-        file_type: file.type,
-        file_size: file.size
-      }]
-      ).
-      select().
-      single();
-
-      if (dbError) {
-        throw dbError;
-      }
-
-      setUploadProgress(90);
-
-      // Start AI analysis
-      setAnalyzing(true);
-      const csvString = Papa.unparse(parsedData.slice(0, 100)); // Send first 100 rows for analysis
-      const analysis = await analyzeDataWithAI(csvString, file.name);
-
-      // Update file record with analysis results
-      const { error: updateError } = await supabase.
-      from('file_uploads').
-      update({ analysis_results: analysis }).
-      eq('id', fileRecord.id);
-
-      if (updateError) {
-        console.error('Error saving analysis:', updateError);
+        console.error('Storage Upload Error:', {
+          message: uploadError.message,
+          stack: uploadError.stack,
+          details: uploadError
+        });
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
       }
 
       setUploadProgress(100);
-      toast.success('File uploaded and analyzed successfully!');
-
-      if (onUploadComplete) {
-        onUploadComplete();
-      }
-
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload file. Please try again.');
+      toast.success('File uploaded successfully!');
+      onUploadComplete?.();
+    } catch (error: any) {
+      console.error('Upload Process Error:', {
+        error: error,
+        message: error.message,
+        stack: error.stack
+      });
+      toast.error(`Upload failed: ${error.message}`);
     } finally {
       setUploading(false);
       setAnalyzing(false);
-      setUploadProgress(0);
     }
   }, [user, onUploadComplete]);
 
-  const readFileAsText = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = reject;
+  const connectDatabase = async () => {
+    const requiredFields = ['host', 'database', 'username', 'table'];
+    const missingFields = requiredFields.filter(field => !dbConnection[field as keyof typeof dbConnection]);
 
-      if (file.name.toLowerCase().endsWith('.csv')) {
-        reader.readAsText(file);
-      } else {
-        reader.readAsBinaryString(file);
+    if (missingFields.length > 0 || !user?.user_id) {
+      toast.error(`Missing required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const response = await fetch('/api/connect-database', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+        },
+        body: JSON.stringify({
+          ...dbConnection,
+          user_id: user.user_id,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Database connection failed');
       }
-    });
+
+      const result = await response.json();
+      toast.success('Database connected successfully!');
+      setPreview(result.sampleData || []);
+      onUploadComplete?.();
+    } catch (error: any) {
+      console.error('Database Connection Error:', {
+        error: error,
+        message: error.message,
+        stack: error.stack
+      });
+      toast.error(error.message || 'Database connection failed');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -156,231 +568,216 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
     accept: {
       'text/csv': ['.csv'],
       'application/vnd.ms-excel': ['.xls'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
     },
     multiple: false,
-    disabled: uploading
+    disabled: uploading,
+    maxSize: 10 * 1024 * 1024,
+    onDragEnter: undefined,
+    onDragOver: undefined,
+    onDragLeave: undefined
   });
 
-  const connectDatabase = async () => {
-    if (!dbConnection.host || !dbConnection.database || !dbConnection.username || !dbConnection.table) {
-      toast.error('Please fill in all required database connection fields');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      // Note: In a real implementation, you'd handle database connections server-side
-      // This is a placeholder for the database connection logic
-      toast.info('Database connection feature will be implemented server-side for security');
-
-    } catch (error) {
-      console.error('Database connection error:', error);
-      toast.error('Failed to connect to database');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
-    <div className="p-6 space-y-6" data-id="hs2q43nr7" data-path="src/components/FileUpload.tsx">
-      <div data-id="ll0y32a3n" data-path="src/components/FileUpload.tsx">
-        <h1 className="text-3xl font-bold" data-id="m3gng1jzj" data-path="src/components/FileUpload.tsx">Upload Data</h1>
-        <p className="text-muted-foreground mt-1" data-id="qi7z5mz2o" data-path="src/components/FileUpload.tsx">
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Upload Data</h1>
+        <p className="text-muted-foreground mt-1">
           Upload CSV/Excel files or connect to databases for analysis
         </p>
       </div>
 
-      <Tabs defaultValue="file" className="space-y-6" data-id="nkf09de1p" data-path="src/components/FileUpload.tsx">
-        <TabsList data-id="th2uyuoux" data-path="src/components/FileUpload.tsx">
-          <TabsTrigger value="file" data-id="140usjjr1" data-path="src/components/FileUpload.tsx">File Upload</TabsTrigger>
-          <TabsTrigger value="database" data-id="socygaz0c" data-path="src/components/FileUpload.tsx">Database Connection</TabsTrigger>
+      <Tabs defaultValue="file" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="file">File Upload</TabsTrigger>
+          <TabsTrigger value="database">Database Connection</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="file" className="space-y-6" data-id="q0io0z56y" data-path="src/components/FileUpload.tsx">
-          <Card data-id="3g66e0em0" data-path="src/components/FileUpload.tsx">
-            <CardHeader data-id="acx3otvhx" data-path="src/components/FileUpload.tsx">
-              <CardTitle className="flex items-center space-x-2" data-id="irnzlu5wo" data-path="src/components/FileUpload.tsx">
-                <Upload className="w-5 h-5" data-id="fjvk83866" data-path="src/components/FileUpload.tsx" />
-                <span data-id="qjdynwb8q" data-path="src/components/FileUpload.tsx">File Upload</span>
+        <TabsContent value="file" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Upload className="w-5 h-5" />
+                <span>File Upload</span>
               </CardTitle>
             </CardHeader>
-            <CardContent data-id="5q80u5jlo" data-path="src/components/FileUpload.tsx">
+            <CardContent>
               <div
                 {...getRootProps()}
                 className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
-                isDragActive ?
-                'border-primary bg-primary/5' :
-                'border-muted-foreground/25 hover:border-primary/50'} ${
-                uploading ? 'opacity-50 cursor-not-allowed' : ''}`} data-id="ca7iqpiiy" data-path="src/components/FileUpload.tsx">
-
-                <input {...getInputProps()} data-id="fgwx9s9wq" data-path="src/components/FileUpload.tsx" />
-                <div className="space-y-4" data-id="jdurm0xz9" data-path="src/components/FileUpload.tsx">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto" data-id="c3b8nb2e8" data-path="src/components/FileUpload.tsx">
-                    {uploading ?
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" data-id="hcqz57cfn" data-path="src/components/FileUpload.tsx" /> :
-
-                    <File className="w-8 h-8 text-primary" data-id="8rv9iz5y9" data-path="src/components/FileUpload.tsx" />
-                    }
+                  isDragActive
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted-foreground/25 hover:border-primary/50'
+                } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <input {...getInputProps()} />
+                <div className="space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    {uploading ? (
+                      <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    ) : (
+                      <File className="w-8 h-8 text-primary" />
+                    )}
                   </div>
-                  
-                  {uploading ?
-                  <div className="space-y-2" data-id="jk2liu7fv" data-path="src/components/FileUpload.tsx">
-                      <p className="text-lg font-medium" data-id="2fy4a810y" data-path="src/components/FileUpload.tsx">
-                        {analyzing ? 'Analyzing with AI...' : 'Uploading...'}
+
+                  {uploading ? (
+                    <div className="space-y-2">
+                      <p className="text-lg font-medium">
+                        {analyzing ? 'Analyzing...' : 'Uploading...'}
                       </p>
-                      <Progress value={uploadProgress} className="w-64 mx-auto" data-id="zwdldtmle" data-path="src/components/FileUpload.tsx" />
-                      <p className="text-sm text-muted-foreground" data-id="zy2z7lo1l" data-path="src/components/FileUpload.tsx">
+                      <Progress
+                        value={uploadProgress}
+                        className="w-64 mx-auto"
+                      />
+                      <p className="text-sm text-muted-foreground">
                         {uploadProgress}% complete
                       </p>
-                    </div> :
-                  isDragActive ?
-                  <p className="text-lg font-medium" data-id="x11bfj3ap" data-path="src/components/FileUpload.tsx">Drop your file here...</p> :
-
-                  <div className="space-y-2" data-id="prbiezth3" data-path="src/components/FileUpload.tsx">
-                      <p className="text-lg font-medium" data-id="kiwl1d8pa" data-path="src/components/FileUpload.tsx">
+                    </div>
+                  ) : isDragActive ? (
+                    <p className="text-lg font-medium">Drop your file here...</p>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-lg font-medium">
                         Drag & drop files here, or click to select
                       </p>
-                      <p className="text-muted-foreground" data-id="lzs241l8q" data-path="src/components/FileUpload.tsx">
-                        Supports CSV, Excel (.xlsx, .xls) files
+                      <p className="text-muted-foreground">
+                        Supports CSV, Excel (.xlsx, .xls) files (Max 10MB)
                       </p>
                     </div>
-                  }
+                  )}
                 </div>
               </div>
 
-              {preview.length > 0 &&
-              <div className="mt-6" data-id="24qnrxp20" data-path="src/components/FileUpload.tsx">
-                  <h3 className="text-lg font-medium mb-3" data-id="u5finqmvz" data-path="src/components/FileUpload.tsx">Data Preview</h3>
-                  <div className="border rounded-lg overflow-auto max-h-64" data-id="tuzecdlrn" data-path="src/components/FileUpload.tsx">
-                    <table className="w-full text-sm" data-id="8a33rk3m9" data-path="src/components/FileUpload.tsx">
-                      <thead className="bg-muted" data-id="tm3weoily" data-path="src/components/FileUpload.tsx">
-                        <tr data-id="p1utjewg9" data-path="src/components/FileUpload.tsx">
-                          {Object.keys(preview[0] || {}).map((header) =>
-                        <th key={header} className="p-2 text-left font-medium" data-id="drp66fjrw" data-path="src/components/FileUpload.tsx">
+              {preview.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium mb-3">Data Preview</h3>
+                  <div className="border rounded-lg overflow-auto max-h-64">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted">
+                        <tr>
+                          {Object.keys(preview[0]).map((header) => (
+                            <th key={header} className="p-2 text-left font-medium">
                               {header}
                             </th>
-                        )}
+                          ))}
                         </tr>
                       </thead>
-                      <tbody data-id="tbvt0mpvi" data-path="src/components/FileUpload.tsx">
-                        {preview.map((row, index) =>
-                      <tr key={index} className="border-t" data-id="ptcqv9qhw" data-path="src/components/FileUpload.tsx">
-                            {Object.values(row).map((value: any, cellIndex) =>
-                        <td key={cellIndex} className="p-2" data-id="f3ncockrp" data-path="src/components/FileUpload.tsx">
+                      <tbody>
+                        {preview.map((row, index) => (
+                          <tr key={index} className="border-t">
+                            {Object.values(row).map((value: any, cellIndex) => (
+                              <td key={cellIndex} className="p-2">
                                 {String(value || '').slice(0, 50)}
                                 {String(value || '').length > 50 ? '...' : ''}
                               </td>
-                        )}
+                            ))}
                           </tr>
-                      )}
+                        ))}
                       </tbody>
                     </table>
                   </div>
                 </div>
-              }
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="database" className="space-y-6" data-id="9igjwodog" data-path="src/components/FileUpload.tsx">
-          <Card data-id="vbqjmys0g" data-path="src/components/FileUpload.tsx">
-            <CardHeader data-id="gi183ir5z" data-path="src/components/FileUpload.tsx">
-              <CardTitle className="flex items-center space-x-2" data-id="h6bkky2dw" data-path="src/components/FileUpload.tsx">
-                <Database className="w-5 h-5" data-id="jiuav91vp" data-path="src/components/FileUpload.tsx" />
-                <span data-id="9y3pzq15e" data-path="src/components/FileUpload.tsx">Database Connection</span>
+        <TabsContent value="database" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Database className="w-5 h-5" />
+                <span>Database Connection</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4" data-id="jau4be7c3" data-path="src/components/FileUpload.tsx">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-id="sf3rwm83l" data-path="src/components/FileUpload.tsx">
-                <div className="space-y-2" data-id="2rknev128" data-path="src/components/FileUpload.tsx">
-                  <Label htmlFor="host" data-id="eerd8ic9d" data-path="src/components/FileUpload.tsx">Host *</Label>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="host">Host *</Label>
                   <Input
                     id="host"
-                    placeholder="localhost"
                     value={dbConnection.host}
-                    onChange={(e) => setDbConnection((prev) => ({ ...prev, host: e.target.value }))} data-id="nwz4hjoxj" data-path="src/components/FileUpload.tsx" />
-
+                    onChange={(e) => setDbConnection(p => ({ ...p, host: e.target.value }))}
+                  />
                 </div>
-                <div className="space-y-2" data-id="2njq8m2pl" data-path="src/components/FileUpload.tsx">
-                  <Label htmlFor="port" data-id="ru4dbrz3d" data-path="src/components/FileUpload.tsx">Port</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="port">Port *</Label>
                   <Input
                     id="port"
-                    placeholder="5432"
                     value={dbConnection.port}
-                    onChange={(e) => setDbConnection((prev) => ({ ...prev, port: e.target.value }))} data-id="l9mme2hg8" data-path="src/components/FileUpload.tsx" />
-
+                    onChange={(e) => setDbConnection(p => ({ ...p, port: e.target.value }))}
+                  />
                 </div>
-                <div className="space-y-2" data-id="85sdiqh2u" data-path="src/components/FileUpload.tsx">
-                  <Label htmlFor="database" data-id="mnw50tx67" data-path="src/components/FileUpload.tsx">Database *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="database">Database *</Label>
                   <Input
                     id="database"
-                    placeholder="my_database"
                     value={dbConnection.database}
-                    onChange={(e) => setDbConnection((prev) => ({ ...prev, database: e.target.value }))} data-id="cgcv4nwqi" data-path="src/components/FileUpload.tsx" />
-
+                    onChange={(e) => setDbConnection(p => ({ ...p, database: e.target.value }))}
+                  />
                 </div>
-                <div className="space-y-2" data-id="6lvyamksn" data-path="src/components/FileUpload.tsx">
-                  <Label htmlFor="username" data-id="z0vd5vph8" data-path="src/components/FileUpload.tsx">Username *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username *</Label>
                   <Input
                     id="username"
-                    placeholder="postgres"
                     value={dbConnection.username}
-                    onChange={(e) => setDbConnection((prev) => ({ ...prev, username: e.target.value }))} data-id="67wo36uml" data-path="src/components/FileUpload.tsx" />
-
+                    onChange={(e) => setDbConnection(p => ({ ...p, username: e.target.value }))}
+                  />
                 </div>
-                <div className="space-y-2" data-id="t4vfzl367" data-path="src/components/FileUpload.tsx">
-                  <Label htmlFor="password" data-id="ob144bg25" data-path="src/components/FileUpload.tsx">Password</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password *</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter password"
                     value={dbConnection.password}
-                    onChange={(e) => setDbConnection((prev) => ({ ...prev, password: e.target.value }))} data-id="98p0xq079" data-path="src/components/FileUpload.tsx" />
-
+                    onChange={(e) => setDbConnection(p => ({ ...p, password: e.target.value }))}
+                  />
                 </div>
-                <div className="space-y-2" data-id="k4u8lgbg7" data-path="src/components/FileUpload.tsx">
-                  <Label htmlFor="table" data-id="18id7sww3" data-path="src/components/FileUpload.tsx">Table Name *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="table">Table Name *</Label>
                   <Input
                     id="table"
-                    placeholder="my_table"
                     value={dbConnection.table}
-                    onChange={(e) => setDbConnection((prev) => ({ ...prev, table: e.target.value }))} data-id="4b5o48qp8" data-path="src/components/FileUpload.tsx" />
-
+                    onChange={(e) => setDbConnection(p => ({ ...p, table: e.target.value }))}
+                  />
                 </div>
               </div>
 
-              <div className="flex items-start space-x-2 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg" data-id="7emkyp51u" data-path="src/components/FileUpload.tsx">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" data-id="0w6anylts" data-path="src/components/FileUpload.tsx" />
-                <div className="text-sm" data-id="q58sjvkex" data-path="src/components/FileUpload.tsx">
-                  <p className="font-medium text-yellow-800 dark:text-yellow-200" data-id="cvpddzri2" data-path="src/components/FileUpload.tsx">
+              <div className="flex items-start space-x-2 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-yellow-800 dark:text-yellow-200">
                     Database Connection Notice
                   </p>
-                  <p className="text-yellow-700 dark:text-yellow-300" data-id="y4id5t4e8" data-path="src/components/FileUpload.tsx">
-                    Database connections will be processed securely on our servers to protect your credentials.
+                  <p className="text-yellow-700 dark:text-yellow-300">
+                    Credentials are encrypted and only used for this session.
                   </p>
                 </div>
               </div>
 
-              <Button onClick={connectDatabase} disabled={uploading} className="w-full" data-id="5zh39nua7" data-path="src/components/FileUpload.tsx">
-                {uploading ?
-                <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" data-id="0ewhr5sge" data-path="src/components/FileUpload.tsx" />
+              <Button
+                onClick={connectDatabase}
+                disabled={uploading}
+                className="w-full"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Connecting...
-                  </> :
-
-                <>
-                    <Database className="w-4 h-4 mr-2" data-id="4rqrne9jt" data-path="src/components/FileUpload.tsx" />
-                    Test Connection & Import Data
                   </>
-                }
+                ) : (
+                  <>
+                    <Database className="w-4 h-4 mr-2" />
+                    Connect & Import Data Live
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>);
-
+    </div>
+  );
 };
 
 export default FileUpload;

@@ -122,7 +122,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeView, setActiveView }) => {
         </div>
         <Button onClick={loadDashboardData} disabled={loading} data-id="9gue3o7n4" data-path="src/components/Dashboard.tsx">
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} data-id="nbqov4nh0" data-path="src/components/Dashboard.tsx" />
-          Refresh
+          Refresh Now | Live
         </Button>
       </div>
 
