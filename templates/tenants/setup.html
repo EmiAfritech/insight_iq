@@ -1,0 +1,301 @@
+{% extends 'public_base.html' %}
+{% load static %}
+
+{% block title %}Setup Your Organization - InsightIQ{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .setup-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .setup-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+        max-width: 800px;
+        width: 100%;
+    }
+    
+    .setup-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 2.5rem 2rem 2rem;
+        position: relative;
+    }
+    
+    .setup-header h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        position: relative;
+    }
+    
+    .setup-header p {
+        margin: 0.5rem 0 0;
+        opacity: 0.9;
+        position: relative;
+    }
+    
+    .setup-body {
+        padding: 2.5rem 2rem;
+    }
+    
+    .step-item {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+    }
+    
+    .step-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        font-weight: 700;
+        margin-right: 1rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 0.875rem 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        margin: 0.5rem;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid #667eea;
+        color: #667eea;
+        border-radius: 12px;
+        padding: 0.875rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin: 0.5rem;
+    }
+    
+    .btn-outline-primary:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .alert {
+        border-radius: 12px;
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+    
+    .alert-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .tenant-info {
+        background: #e3f2fd;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        border-radius: 12px;
+        padding: 0.875rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin: 0.5rem;
+        opacity: 0.6;
+    }
+    
+    .btn-outline-secondary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    @media (max-width: 576px) {
+        .setup-container {
+            padding: 1rem;
+        }
+        
+        .setup-card {
+            margin: 0 1rem;
+        }
+        
+        .setup-header,
+        .setup-body {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="setup-container">
+    <div class="setup-card">
+        <div class="setup-header">
+            <h1><i class="fas fa-check-circle me-2"></i>Organization Created Successfully!</h1>
+            <p>Welcome to InsightIQ! Let's get your organization set up.</p>
+        </div>
+        
+        <div class="setup-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% if tenant %}
+            <div class="tenant-info">
+                <h4><i class="fas fa-building me-2"></i>{{ tenant.name }}</h4>
+                <p class="mb-0">
+                    <i class="fas fa-link me-1"></i>
+                    Your organization URL: <strong>{{ tenant.domains.first.domain }}</strong>
+                </p>
+            </div>
+            {% endif %}
+            
+            <h3 class="mb-4">Next Steps</h3>
+            
+            <div class="step-item">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">1</span>
+                    <div>
+                        <h5 class="mb-2">Invite Team Members</h5>
+                        <p class="mb-3">Add your colleagues to start collaborating on insights and analytics.</p>
+                        {% url 'tenants:invite_user' as invite_url %}
+                        {% if invite_url %}
+                            <a href="{{ invite_url }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-user-plus me-2"></i>Invite Users
+                            </a>
+                        {% else %}
+                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                <i class="fas fa-user-plus me-2"></i>Coming Soon
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step-item">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">2</span>
+                    <div>
+                        <h5 class="mb-2">Connect Data Sources</h5>
+                        <p class="mb-3">Import your data to start generating powerful insights and reports.</p>
+                        <button class="btn btn-outline-secondary btn-sm" disabled>
+                            <i class="fas fa-database me-2"></i>Coming Soon
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step-item">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">3</span>
+                    <div>
+                        <h5 class="mb-2">Create Your First Dashboard</h5>
+                        <p class="mb-3">Build interactive dashboards to visualize your data and track key metrics.</p>
+                        <button class="btn btn-outline-secondary btn-sm" disabled>
+                            <i class="fas fa-chart-line me-2"></i>Coming Soon
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step-item">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">4</span>
+                    <div>
+                        <h5 class="mb-2">Customize Settings</h5>
+                        <p class="mb-3">Configure your organization settings, branding, and preferences.</p>
+                        {% url 'tenants:settings' as settings_url %}
+                        {% if settings_url %}
+                            <a href="{{ settings_url }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-cog me-2"></i>Organization Settings
+                            </a>
+                        {% else %}
+                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                <i class="fas fa-cog me-2"></i>Coming Soon
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <h5>Ready to get started?</h5>
+                <p class="text-muted mb-3">Jump into your dashboard and start exploring InsightIQ's features.</p>
+                
+                <button class="btn btn-primary" disabled>
+                    <i class="fas fa-rocket me-2"></i>Dashboard Coming Soon
+                </button>
+                
+                <a href="{% url 'core:public_contact' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-question-circle me-2"></i>Need Help?
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

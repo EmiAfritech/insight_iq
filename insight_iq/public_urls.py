@@ -9,6 +9,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.public_urls')),
+    path('dashboard/', include('core.urls')),  # Add dashboard routing
     path('subscriptions/', include('subscriptions.urls')),
     path('payments/', include('payments.urls')),
     path('accounts/', include('allauth.urls')),

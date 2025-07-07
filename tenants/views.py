@@ -1,16 +1,14 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, UpdateView, ListView, DeleteView, TemplateView
-from django.forms import ModelForm
+from django.views.generic import CreateView, UpdateView, ListView, DeleteView, TemplateView, FormView
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
 from .models import Tenant, Domain, TenantUser
-from .forms import TenantCreationForm, TenantUserForm, TenantSettingsForm, UserInviteForm
+from .forms import SimpleTenantCreationForm, TenantUserForm, TenantSettingsForm, UserInviteForm
 
 
 class TenantCreateView(LoginRequiredMixin, CreateView):
@@ -18,7 +16,7 @@ class TenantCreateView(LoginRequiredMixin, CreateView):
     View for creating a new tenant
     """
     model = Tenant
-    form_class = TenantCreationForm
+    form_class = SimpleTenantCreationForm
     template_name = 'tenants/create_tenant.html'
     success_url = reverse_lazy('tenants:setup')
     
@@ -26,9 +24,12 @@ class TenantCreateView(LoginRequiredMixin, CreateView):
         response = super().form_valid(form)
         
         # Create domain for tenant
-        domain_name = form.cleaned_data.get('domain_name', self.object.name.lower().replace(' ', '-'))
+        domain_name = form.cleaned_data.get('domain_name')
+        if not domain_name:
+            domain_name = self.object.name.lower().replace(' ', '-')
+        tenant_domain = getattr(settings, 'TENANT_DOMAIN', 'localhost')
         Domain.objects.create(
-            domain=f"{domain_name}.{settings.TENANT_DOMAIN}",
+            domain=f"{domain_name}.{tenant_domain}",
             tenant=self.object,
             is_primary=True
         )
@@ -40,7 +41,7 @@ class TenantCreateView(LoginRequiredMixin, CreateView):
             role='owner'
         )
         
-        messages.success(self.request, f"Tenant '{self.object.name}' created successfully!")
+        messages.success(self.request, f"Organization '{self.object.name}' created successfully!")
         return response
 
 
@@ -132,7 +133,7 @@ class TenantUserListView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class TenantUserInviteView(LoginRequiredMixin, CreateView):
+class TenantUserInviteView(LoginRequiredMixin, FormView):
     """
     View for inviting new users to tenant
     """
@@ -162,6 +163,14 @@ class TenantUserInviteView(LoginRequiredMixin, CreateView):
             if TenantUser.objects.filter(user=user, tenant=self.tenant_user.tenant).exists():
                 messages.error(self.request, "User is already a member of this tenant.")
                 return self.form_invalid(form)
+            
+            # User exists but not in this tenant - create TenantUser
+            tenant_user = TenantUser.objects.create(
+                user=user,
+                tenant=self.tenant_user.tenant,
+                role=role
+            )
+            
         except User.DoesNotExist:
             # Create new user with random password
             user = User.objects.create_user(
@@ -173,19 +182,19 @@ class TenantUserInviteView(LoginRequiredMixin, CreateView):
             )
             user.is_active = False  # User needs to activate account
             user.save()
-        
-        # Create tenant user
-        tenant_user = TenantUser.objects.create(
-            user=user,
-            tenant=self.tenant_user.tenant,
-            role=role
-        )
+            
+            # Create tenant user
+            tenant_user = TenantUser.objects.create(
+                user=user,
+                tenant=self.tenant_user.tenant,
+                role=role
+            )
         
         # Send invitation email
         self.send_invitation_email(user, tenant_user)
         
         messages.success(self.request, f"Invitation sent to {email}!")
-        return redirect(self.success_url)
+        return super().form_valid(form)
     
     def send_invitation_email(self, user, tenant_user):
         """

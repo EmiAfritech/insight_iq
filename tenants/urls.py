@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import debug_views
 
 app_name = 'tenants'
 
@@ -13,4 +14,5 @@ urlpatterns = [
     path('users/invite/', views.TenantUserInviteView.as_view(), name='invite_user'),
     path('users/<int:pk>/edit/', views.TenantUserEditView.as_view(), name='edit_user'),
     path('users/<int:pk>/delete/', views.TenantUserDeleteView.as_view(), name='delete_user'),
+    path('debug/status/', debug_views.user_status, name='debug_status'),
 ]

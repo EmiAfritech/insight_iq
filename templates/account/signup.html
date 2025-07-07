@@ -1,0 +1,438 @@
+{% extends "public_base.html" %}
+{% load allauth account %}
+
+{% block title %}Sign Up - InsightIQ{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .auth-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+        max-width: 450px;
+        width: 100%;
+    }
+    
+    .auth-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 2.5rem 2rem 2rem;
+        position: relative;
+    }
+    
+    .auth-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><radialGradient id="a" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="rgba(255,255,255,.1)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient></defs><rect width="100" height="20" fill="url(%23a)"/></svg>');
+        opacity: 0.1;
+    }
+    
+    .auth-header h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        position: relative;
+    }
+    
+    .auth-header p {
+        margin: 0.5rem 0 0;
+        opacity: 0.9;
+        position: relative;
+    }
+    
+    .auth-body {
+        padding: 2.5rem 2rem;
+    }
+    
+    .form-floating {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-floating > .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem 0.75rem;
+        height: auto;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-floating > .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .form-floating > label {
+        padding: 1rem 0.75rem;
+        color: #6c757d;
+    }
+    
+    .btn-auth {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 0.875rem 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-auth::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-auth:hover::before {
+        left: 100%;
+    }
+    
+    .btn-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .auth-links {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .auth-links a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+    
+    .auth-links a:hover {
+        color: #764ba2;
+    }
+    
+    .alert {
+        border-radius: 12px;
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .password-requirements {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .password-requirements ul {
+        margin: 0;
+        padding-left: 1.2rem;
+    }
+    
+    .password-requirements li {
+        margin-bottom: 0.25rem;
+    }
+    
+    @media (max-width: 576px) {
+        .auth-container {
+            padding: 1rem;
+        }
+        
+        .auth-card {
+            margin: 0 1rem;
+        }
+        
+        .auth-header,
+        .auth-body {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1><i class="fas fa-user-plus me-2"></i>Sign Up</h1>
+            <p>Join InsightIQ today</p>
+        </div>
+        
+        <div class="auth-body">
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Please correct the errors below.
+                </div>
+            {% endif %}
+            
+            {% if settings.DEBUG %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Development Mode:</strong> Email verification is disabled. You can sign up and login immediately.
+                </div>
+            {% endif %}
+            
+            <form method="post" action="{% url 'account_signup' %}">
+                {% csrf_token %}
+                
+                <div class="form-floating">
+                    <input type="email" 
+                           class="form-control{% if form.email.errors %} is-invalid{% endif %}" 
+                           id="id_email" 
+                           name="email" 
+                           placeholder="Email address"
+                           value="{{ form.email.value|default:'' }}"
+                           required>
+                    <label for="id_email">Email address</label>
+                    {% if form.email.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.email.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-floating">
+                    <input type="password" 
+                           class="form-control{% if form.password1.errors %} is-invalid{% endif %}" 
+                           id="id_password1" 
+                           name="password1" 
+                           placeholder="Password"
+                           required>
+                    <label for="id_password1">Password</label>
+                    {% if form.password1.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.password1.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <div id="password-strength" class="password-strength"></div>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="password" 
+                           class="form-control{% if form.password2.errors %} is-invalid{% endif %}" 
+                           id="id_password2" 
+                           name="password2" 
+                           placeholder="Confirm Password"
+                           required>
+                    <label for="id_password2">Confirm Password</label>
+                    {% if form.password2.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.password2.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="password-requirements">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <strong>Password requirements:</strong>
+                    <ul>
+                        <li>At least 8 characters long</li>
+                        <li>Must contain letters and numbers</li>
+                        <li>Cannot be too similar to your email</li>
+                    </ul>
+                </div>
+                
+                <button type="submit" class="btn btn-auth mt-3">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </button>
+                
+                {% if redirect_field_value %}
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                {% endif %}
+            </form>
+            
+            <div class="auth-links">
+                <p class="mb-0">
+                    Already have an account? 
+                    <a href="{% url 'account_login' %}">Sign in</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add some interactive effects
+document.addEventListener('DOMContentLoaded', function() {
+    // Add floating label animation
+    const formControls = document.querySelectorAll('.form-floating .form-control');
+    
+    formControls.forEach(function(control) {
+        control.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        control.addEventListener('blur', function() {
+            if (this.value === '') {
+                this.parentElement.classList.remove('focused');
+            }
+        });
+        
+        // Check if already has value on load
+        if (control.value !== '') {
+            control.parentElement.classList.add('focused');
+        }
+    });
+    
+    // Add ripple effect to button
+    const button = document.querySelector('.btn-auth');
+    if (button) {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    }
+    
+    // Password strength indicator
+    const password1 = document.getElementById('id_password1');
+    const password2 = document.getElementById('id_password2');
+    
+    if (password1) {
+        password1.addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+        });
+    }
+    
+    if (password2) {
+        password2.addEventListener('input', function() {
+            checkPasswordMatch();
+        });
+    }
+    
+    function checkPasswordStrength(password) {
+        // Simple password strength check
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        if (/\d/.test(password)) strength++;
+        if (/[^a-zA-Z\d]/.test(password)) strength++;
+        
+        const strengthBar = document.getElementById('password-strength');
+        if (strengthBar) {
+            strengthBar.className = 'password-strength strength-' + strength;
+        }
+    }
+    
+    function checkPasswordMatch() {
+        const password1 = document.getElementById('id_password1');
+        const password2 = document.getElementById('id_password2');
+        
+        if (password1.value && password2.value) {
+            if (password1.value === password2.value) {
+                password2.classList.remove('is-invalid');
+                password2.classList.add('is-valid');
+            } else {
+                password2.classList.remove('is-valid');
+                password2.classList.add('is-invalid');
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.btn-auth {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+.form-floating.focused > label {
+    color: #667eea !important;
+}
+
+.password-strength {
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.password-strength.strength-1 {
+    background: linear-gradient(to right, #dc3545 25%, #e9ecef 25%);
+}
+
+.password-strength.strength-2 {
+    background: linear-gradient(to right, #ffc107 50%, #e9ecef 50%);
+}
+
+.password-strength.strength-3 {
+    background: linear-gradient(to right, #fd7e14 75%, #e9ecef 75%);
+}
+
+.password-strength.strength-4 {
+    background: #28a745;
+}
+</style>
+{% endblock %}

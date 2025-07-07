@@ -1,0 +1,359 @@
+{% extends "public_base.html" %}
+{% load allauth account %}
+
+{% block title %}Sign In - InsightIQ{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .auth-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+        max-width: 450px;
+        width: 100%;
+    }
+    
+    .auth-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 2.5rem 2rem 2rem;
+        position: relative;
+    }
+    
+    .auth-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><radialGradient id="a" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="rgba(255,255,255,.1)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient></defs><rect width="100" height="20" fill="url(%23a)"/></svg>');
+        opacity: 0.1;
+    }
+    
+    .auth-header h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        position: relative;
+    }
+    
+    .auth-header p {
+        margin: 0.5rem 0 0;
+        opacity: 0.9;
+        position: relative;
+    }
+    
+    .auth-body {
+        padding: 2.5rem 2rem;
+    }
+    
+    .form-floating {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-floating > .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem 0.75rem;
+        height: auto;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-floating > .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .form-floating > label {
+        padding: 1rem 0.75rem;
+        color: #6c757d;
+    }
+    
+    .btn-auth {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 0.875rem 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-auth::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-auth:hover::before {
+        left: 100%;
+    }
+    
+    .btn-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .auth-links {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .auth-links a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+    
+    .auth-links a:hover {
+        color: #764ba2;
+    }
+    
+    .form-check {
+        margin: 1.5rem 0;
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .form-check-input:focus {
+        border-color: #667eea;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .alert {
+        border-radius: 12px;
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .forgot-password {
+        font-size: 0.9rem;
+        text-align: right;
+        margin-top: 0.5rem;
+    }
+    
+    @media (max-width: 576px) {
+        .auth-container {
+            padding: 1rem;
+        }
+        
+        .auth-card {
+            margin: 0 1rem;
+        }
+        
+        .auth-header,
+        .auth-body {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1><i class="fas fa-sign-in-alt me-2"></i>Sign In</h1>
+            <p>Welcome back to InsightIQ</p>
+        </div>
+        
+        <div class="auth-body">
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% if form.non_field_errors %}
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    {% else %}
+                        Please correct the errors below.
+                    {% endif %}
+                </div>
+            {% endif %}
+            
+            <form method="post" action="{% url 'account_login' %}">
+                {% csrf_token %}
+                
+                <div class="form-floating">
+                    <input type="email" 
+                           class="form-control{% if form.login.errors %} is-invalid{% endif %}" 
+                           id="id_login" 
+                           name="login" 
+                           placeholder="Email address"
+                           value="{{ form.login.value|default:'' }}"
+                           required>
+                    <label for="id_login">Email address</label>
+                    {% if form.login.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.login.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-floating">
+                    <input type="password" 
+                           class="form-control{% if form.password.errors %} is-invalid{% endif %}" 
+                           id="id_password" 
+                           name="password" 
+                           placeholder="Password"
+                           required>
+                    <label for="id_password">Password</label>
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.password.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input" 
+                           type="checkbox" 
+                           name="remember" 
+                           id="id_remember"
+                           {% if form.remember.value %}checked{% endif %}>
+                    <label class="form-check-label" for="id_remember">
+                        Remember me
+                    </label>
+                </div>
+                
+                <div class="forgot-password">
+                    <a href="{% url 'account_reset_password' %}">Forgot your password?</a>
+                </div>
+                
+                <button type="submit" class="btn btn-auth mt-3">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </button>
+                
+                {% if redirect_field_value %}
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                {% endif %}
+            </form>
+            
+            <div class="auth-links">
+                <p class="mb-0">
+                    Don't have an account? 
+                    <a href="{% url 'account_signup' %}">Sign up</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add some interactive effects
+document.addEventListener('DOMContentLoaded', function() {
+    // Add floating label animation
+    const formControls = document.querySelectorAll('.form-floating .form-control');
+    
+    formControls.forEach(function(control) {
+        control.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        control.addEventListener('blur', function() {
+            if (this.value === '') {
+                this.parentElement.classList.remove('focused');
+            }
+        });
+        
+        // Check if already has value on load
+        if (control.value !== '') {
+            control.parentElement.classList.add('focused');
+        }
+    });
+    
+    // Add ripple effect to button
+    const button = document.querySelector('.btn-auth');
+    if (button) {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    }
+});
+</script>
+
+<style>
+.btn-auth {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+.form-floating.focused > label {
+    color: #667eea !important;
+}
+</style>
+{% endblock %}

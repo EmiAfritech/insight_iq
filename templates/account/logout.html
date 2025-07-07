@@ -1,0 +1,127 @@
+{% extends "public_base.html" %}
+{% load allauth account %}
+
+{% block title %}Sign Out - InsightIQ{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .auth-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+        max-width: 450px;
+        width: 100%;
+    }
+    
+    .auth-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 2.5rem 2rem 2rem;
+        position: relative;
+    }
+    
+    .auth-header h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        position: relative;
+    }
+    
+    .auth-header p {
+        margin: 0.5rem 0 0;
+        opacity: 0.9;
+        position: relative;
+    }
+    
+    .auth-body {
+        padding: 2.5rem 2rem;
+        text-align: center;
+    }
+    
+    .btn-auth {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 0.875rem 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        border-radius: 12px;
+        padding: 0.875rem 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1><i class="fas fa-sign-out-alt me-2"></i>Sign Out</h1>
+            <p>Are you sure you want to sign out?</p>
+        </div>
+        
+        <div class="auth-body">
+            <p class="mb-4">You are currently signed in as <strong>{{ user.email }}</strong></p>
+            
+            <form method="post" action="{% url 'account_logout' %}">
+                {% csrf_token %}
+                
+                {% if redirect_field_value %}
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+                {% endif %}
+                
+                <button type="submit" class="btn btn-auth">
+                    <i class="fas fa-sign-out-alt me-2"></i>Sign Out
+                </button>
+            </form>
+            
+            <a href="{% url 'core:landing' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Stay Signed In
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

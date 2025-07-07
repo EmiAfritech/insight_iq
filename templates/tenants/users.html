@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Users - InsightIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .users-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .users-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .users-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .users-header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 600;
+    }
+    
+    .btn-light {
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        color: #667eea;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .btn-light:hover {
+        background: white;
+        color: #764ba2;
+    }
+    
+    .users-body {
+        padding: 2rem;
+    }
+    
+    .user-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .user-card:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+    
+    .role-badge {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .role-owner {
+        background: #ffeaa7;
+        color: #d63031;
+    }
+    
+    .role-admin {
+        background: #fab1a0;
+        color: #e17055;
+    }
+    
+    .role-analyst {
+        background: #a29bfe;
+        color: #6c5ce7;
+    }
+    
+    .role-viewer {
+        background: #fd79a8;
+        color: #e84393;
+    }
+    
+    .role-guest {
+        background: #ddd;
+        color: #636e72;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="users-container">
+    <div class="users-card">
+        <div class="users-header">
+            <div>
+                <h1><i class="fas fa-users me-2"></i>Team Members</h1>
+                <p class="mb-0">Manage your organization's users and permissions</p>
+            </div>
+            <a href="{% url 'tenants:invite_user' %}" class="btn btn-light">
+                <i class="fas fa-user-plus me-2"></i>Invite User
+            </a>
+        </div>
+        
+        <div class="users-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% if tenant_users %}
+                {% for tenant_user in tenant_users %}
+                <div class="user-card">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-3">
+                                {{ tenant_user.user.first_name|default:tenant_user.user.email|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <h5 class="mb-1">
+                                    {% if tenant_user.user.first_name or tenant_user.user.last_name %}
+                                        {{ tenant_user.user.first_name }} {{ tenant_user.user.last_name }}
+                                    {% else %}
+                                        {{ tenant_user.user.email }}
+                                    {% endif %}
+                                </h5>
+                                <p class="text-muted mb-0">{{ tenant_user.user.email }}</p>
+                                {% if tenant_user.department %}
+                                    <small class="text-muted">{{ tenant_user.department }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="role-badge role-{{ tenant_user.role }} me-3">
+                                {{ tenant_user.get_role_display }}
+                            </span>
+                            <div class="btn-group">
+                                <a href="{% url 'tenants:edit_user' tenant_user.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if tenant_user.role != 'owner' %}
+                                <a href="{% url 'tenants:delete_user' tenant_user.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No team members yet</h4>
+                    <p class="text-muted">Start by inviting your first team member to collaborate.</p>
+                    <a href="{% url 'tenants:invite_user' %}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Invite First User
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
