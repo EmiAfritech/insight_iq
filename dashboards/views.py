@@ -85,7 +85,7 @@ class DashboardCreateView(TenantRequiredMixin, LoginRequiredMixin, CreateView):
         return super().form_valid(form)
     
     def get_success_url(self):
-        return reverse_lazy('dashboards:detail', kwargs={'pk': self.object.pk})
+        return reverse_lazy('dashboard:detail', kwargs={'pk': self.object.pk})
 
 
 class DashboardDetailView(TenantRequiredMixin, DetailView):
@@ -142,7 +142,7 @@ class DashboardEditView(TenantRequiredMixin, LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
     
     def get_success_url(self):
-        return reverse_lazy('dashboards:detail', kwargs={'pk': self.object.pk})
+        return reverse_lazy('dashboard:detail', kwargs={'pk': self.object.pk})
 
 
 class DashboardDeleteView(TenantRequiredMixin, LoginRequiredMixin, DeleteView):
@@ -151,7 +151,7 @@ class DashboardDeleteView(TenantRequiredMixin, LoginRequiredMixin, DeleteView):
     """
     model = Dashboard
     template_name = 'dashboards/delete.html'
-    success_url = reverse_lazy('dashboards:list')
+    success_url = reverse_lazy('dashboard:list')
     
     def get_queryset(self):
         return Dashboard.objects.filter(created_by=self.request.user, tenant=self.request.tenant)
@@ -191,7 +191,7 @@ class WidgetCreateView(TenantRequiredMixin, LoginRequiredMixin, CreateView):
         return super().form_valid(form)
     
     def get_success_url(self):
-        return reverse_lazy('dashboards:detail', kwargs={'pk': self.kwargs['pk']})
+        return reverse_lazy('dashboard:detail', kwargs={'pk': self.kwargs['pk']})
 
 
 class WidgetEditView(TenantRequiredMixin, LoginRequiredMixin, UpdateView):
@@ -211,7 +211,7 @@ class WidgetEditView(TenantRequiredMixin, LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
     
     def get_success_url(self):
-        return reverse_lazy('dashboards:detail', kwargs={'pk': self.object.dashboard.pk})
+        return reverse_lazy('dashboard:detail', kwargs={'pk': self.object.dashboard.pk})
 
 
 class WidgetDeleteView(TenantRequiredMixin, LoginRequiredMixin, DeleteView):
@@ -230,7 +230,7 @@ class WidgetDeleteView(TenantRequiredMixin, LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
     
     def get_success_url(self):
-        return reverse_lazy('dashboards:detail', kwargs={'pk': self.object.dashboard.pk})
+        return reverse_lazy('dashboard:detail', kwargs={'pk': self.object.dashboard.pk})
 
 
 class DashboardTemplateListView(TenantRequiredMixin, ListView):
@@ -294,4 +294,4 @@ class DashboardTemplateUseView(TenantRequiredMixin, LoginRequiredMixin, Template
         template.save(update_fields=['usage_count'])
         
         messages.success(request, f'Dashboard created from template "{template.name}"!')
-        return redirect('dashboards:detail', pk=dashboard.pk)
+        return redirect('dashboard:detail', pk=dashboard.pk)

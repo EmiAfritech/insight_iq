@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}AI Analyses - InsightIQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">AI Analyses</h1>
+                    <p class="text-muted">View and manage your AI-powered data analyses</p>
+                </div>
+                <div>
+                    <a href="{% url 'analytics:dataset_list' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Start New Analysis
+                    </a>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <form method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control" placeholder="Search analyses..." value="{{ search }}">
+                        <button class="btn btn-outline-secondary ms-2" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Analyses List -->
+            {% if analyses %}
+                <div class="row">
+                    {% for analysis in analyses %}
+                    <div class="col-xl-4 col-lg-6 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-transparent">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 text-primary">{{ analysis.name }}</h6>
+                                    <span class="badge bg-{{ analysis.status|default:'info' }}">
+                                        {{ analysis.get_status_display|default:'Completed' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% if analysis.description %}
+                                    <p class="text-muted mb-3">{{ analysis.description|truncatewords:20 }}</p>
+                                {% endif %}
+                                
+                                <div class="small text-muted mb-3">
+                                    <i class="fas fa-database me-1"></i>
+                                    Dataset: {{ analysis.dataset.name|default:'Unknown' }}<br>
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Created: {{ analysis.created_at|date:"M d, Y" }}
+                                </div>
+
+                                {% if analysis.summary %}
+                                    <div class="bg-light p-2 rounded mb-3">
+                                        <small class="text-muted">{{ analysis.summary|truncatewords:15 }}</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'analytics:analysis_detail' analysis.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>View Results
+                                    </a>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'analytics:analysis_edit' analysis.pk %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'analytics:analysis_delete' analysis.pk %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Analyses pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-area fa-4x text-muted mb-4"></i>
+                    <h4>No analyses yet</h4>
+                    <p class="text-muted mb-4">Upload data and start analyzing to see your AI-powered insights here.</p>
+                    <a href="{% url 'analytics:dataset_upload' %}" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Upload Data to Analyze
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,3 +1,6 @@
+"""
+Tenant middleware for handling user redirects and tenant context.
+"""
 import logging
 from django.shortcuts import redirect
 from django.contrib.auth.models import AnonymousUser
@@ -63,6 +66,12 @@ class TenantRedirectMiddleware:
         try:
             tenant_user = TenantUser.objects.get(user=request.user)
             logger.info("User %s has tenant: %s", request.user.email, tenant_user.tenant.name)
+            
+            # If user is on root path and has a tenant, redirect to dashboard
+            if request.path == '/' or request.path == '/dashboard/':
+                logger.info("Redirecting user %s to dashboard", request.user.email)
+                return redirect('dashboard:home')
+            
             # User has a tenant, continue normally
             return None
         except TenantUser.DoesNotExist:

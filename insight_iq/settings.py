@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-import os
 from datetime import timedelta
 from pathlib import Path
 from decouple import config
@@ -218,7 +217,7 @@ AUTHENTICATION_BACKENDS = [
 
 SITE_ID = 1
 
-LOGIN_REDIRECT_URL = '/'  # Redirect to home, then tenant middleware will handle routing
+LOGIN_REDIRECT_URL = '/dashboard/'  # Redirect to dashboard
 LOGOUT_REDIRECT_URL = '/'
 
 # Django Allauth Configuration

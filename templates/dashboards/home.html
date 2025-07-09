@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - InsightIQ{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css" rel="stylesheet">
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        color: white;
+        border: none;
+        transition: transform 0.3s ease;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .quick-action-card {
+        border: 2px dashed #e9ecef;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .quick-action-card:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+        transform: translateY(-3px);
+    }
+    .feature-card {
+        border-radius: 15px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">Welcome back, {{ user.first_name|default:user.username }}!</h1>
+                    <p class="text-muted">Here's what's happening with your data today.</p>
+                </div>
+                <div>
+                    <span class="text-muted">{{ tenant.company_name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1">Dashboards</div>
+                            <div class="h5 mb-0 font-weight-bold text-white">{{ total_dashboards|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100 py-2" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1">Data Sources</div>
+                            <div class="h5 mb-0 font-weight-bold text-white">{{ total_datasets|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-database fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100 py-2" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1">Analyses</div>
+                            <div class="h5 mb-0 font-weight-bold text-white">{{ total_analyses|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-bar fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100 py-2" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1">Reports</div>
+                            <div class="h5 mb-0 font-weight-bold text-white">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">Quick Actions</h4>
+        </div>
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+            <a href="{% url 'analytics:dataset_upload' %}" class="text-decoration-none">
+                <div class="card quick-action-card h-100 text-center p-4">
+                    <div class="card-body">
+                        <i class="fas fa-upload fa-3x text-primary mb-3"></i>
+                        <h5>Upload Data</h5>
+                        <p class="text-muted">Upload CSV, Excel or other data files</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+            <a href="{% url 'dashboard:create' %}" class="text-decoration-none">
+                <div class="card quick-action-card h-100 text-center p-4">
+                    <div class="card-body">
+                        <i class="fas fa-plus-circle fa-3x text-success mb-3"></i>
+                        <h5>Create Dashboard</h5>
+                        <p class="text-muted">Build interactive dashboards</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+            <a href="{% url 'analytics:dataset_list' %}" class="text-decoration-none">
+                <div class="card quick-action-card h-100 text-center p-4">
+                    <div class="card-body">
+                        <i class="fas fa-chart-area fa-3x text-info mb-3"></i>
+                        <h5>View Analytics</h5>
+                        <p class="text-muted">Analyze your data with AI</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+            <a href="{% url 'reports:create' %}" class="text-decoration-none">
+                <div class="card quick-action-card h-100 text-center p-4">
+                    <div class="card-body">
+                        <i class="fas fa-file-pdf fa-3x text-warning mb-3"></i>
+                        <h5>Generate Report</h5>
+                        <p class="text-muted">Create professional reports</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <!-- Recent Dashboards -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">Recent Dashboards</h6>
+                        <a href="{% url 'dashboard:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if user_dashboards %}
+                        {% for dashboard in user_dashboards %}
+                        <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-primary text-white text-center" style="width: 40px; height: 40px; line-height: 40px;">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <div class="font-weight-bold">{{ dashboard.name }}</div>
+                                    <small class="text-muted">Updated {{ dashboard.updated_at|timesince }} ago</small>
+                                </div>
+                            </div>
+                            <a href="{% url 'dashboard:detail' dashboard.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No dashboards yet. Create your first dashboard to get started!</p>
+                            <a href="{% url 'dashboard:create' %}" class="btn btn-primary">Create Dashboard</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Datasets -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">Recent Data</h6>
+                        <a href="{% url 'analytics:dataset_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_datasets %}
+                        {% for dataset in recent_datasets %}
+                        <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-success text-white text-center" style="width: 40px; height: 40px; line-height: 40px;">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <div class="font-weight-bold">{{ dataset.name }}</div>
+                                    <small class="text-muted">{{ dataset.file_size|filesizeformat }} • {{ dataset.created_at|timesince }} ago</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-{{ dataset.status|default:'secondary' }}">{{ dataset.get_status_display|default:'Ready' }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-database fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No data uploaded yet. Upload your first dataset to begin analysis!</p>
+                            <a href="{% url 'analytics:dataset_upload' %}" class="btn btn-primary">Upload Data</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Analyses -->
+    {% if recent_analyses %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card feature-card">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">Recent AI Insights</h6>
+                        <a href="{% url 'analytics:analysis_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for analysis in recent_analyses %}
+                        <div class="col-xl-4 col-lg-6 mb-3">
+                            <div class="card border-left-info">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-info text-white text-center me-3" style="width: 40px; height: 40px; line-height: 40px;">
+                                            <i class="fas fa-brain"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold">{{ analysis.name }}</div>
+                                            <small class="text-muted">{{ analysis.created_at|timesince }} ago</small>
+                                        </div>
+                                    </div>
+                                    {% if analysis.summary %}
+                                    <p class="mt-2 mb-0 text-sm">{{ analysis.summary|truncatewords:15 }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any dashboard-specific JavaScript here
+    console.log('Dashboard loaded successfully');
+});
+</script>
+{% endblock %}

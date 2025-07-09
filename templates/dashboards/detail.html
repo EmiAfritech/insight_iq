@@ -84,7 +84,7 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'dashboards:list' %}">Dashboards</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboard:list' %}">Dashboards</a></li>
         <li class="breadcrumb-item active">{{ dashboard.name }}</li>
     </ol>
 </nav>
@@ -131,7 +131,7 @@
                             <i class="fas fa-cog"></i>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'dashboards:edit' dashboard.pk %}">
+                            <li><a class="dropdown-item" href="{% url 'dashboard:edit' dashboard.pk %}">
                                 <i class="fas fa-edit"></i> Edit Dashboard
                             </a></li>
                             <li><a class="dropdown-item" href="#" onclick="duplicateDashboard()">
@@ -141,7 +141,7 @@
                                 <i class="fas fa-save"></i> Save as Template
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'dashboards:delete' dashboard.pk %}">
+                            <li><a class="dropdown-item" href="{% url 'dashboard:delete' dashboard.pk %}">
                                 <i class="fas fa-trash text-danger"></i> Delete
                             </a></li>
                         </ul>
@@ -408,7 +408,7 @@ function toggleFullscreen() {
 function refreshDashboard() {
     showNotification('Refreshing dashboard...', 'info');
     
-    fetch(`{% url 'dashboards:detail' dashboard.pk %}refresh/`, {
+    fetch(`{% url 'dashboard:detail' dashboard.pk %}refresh/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCookie('csrftoken')
@@ -453,7 +453,7 @@ function refreshWidget(widgetId) {
 }
 
 function editWidget(widgetId) {
-    window.location.href = `{% url 'dashboards:widget_edit' dashboard.pk 0 %}`.replace('0', widgetId);
+    window.location.href = `{% url 'dashboard:widget_edit' dashboard.pk 0 %}`.replace('0', widgetId);
 }
 
 function removeWidget(widgetId) {
@@ -489,7 +489,7 @@ function addWidget() {
     const formData = new FormData(document.getElementById('addWidgetForm'));
     formData.append('dashboard', '{{ dashboard.pk }}');
     
-    fetch(`{% url 'dashboards:widget_create' dashboard.pk %}`, {
+    fetch(`{% url 'dashboard:widget_create' dashboard.pk %}`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -521,7 +521,7 @@ function applyFilters() {
         filters[key] = input.value;
     });
     
-    fetch(`{% url 'dashboards:detail' dashboard.pk %}filter/`, {
+    fetch(`{% url 'dashboard:detail' dashboard.pk %}filter/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -563,7 +563,7 @@ function saveDashboardLayout() {
         });
     });
     
-    fetch(`{% url 'dashboards:detail' dashboard.pk %}layout/`, {
+    fetch(`{% url 'dashboard:detail' dashboard.pk %}layout/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -583,16 +583,16 @@ function saveDashboardLayout() {
 }
 
 function exportDashboard() {
-    window.location.href = `{% url 'dashboards:detail' dashboard.pk %}export/`;
+    window.location.href = `{% url 'dashboard:detail' dashboard.pk %}export/`;
 }
 
 function shareDashboard() {
-    window.location.href = `{% url 'dashboards:share' dashboard.pk %}`;
+    window.location.href = `{% url 'dashboard:share' dashboard.pk %}`;
 }
 
 function duplicateDashboard() {
     if (confirm('Create a copy of this dashboard?')) {
-        fetch(`{% url 'dashboards:detail' dashboard.pk %}duplicate/`, {
+        fetch(`{% url 'dashboard:detail' dashboard.pk %}duplicate/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -602,7 +602,7 @@ function duplicateDashboard() {
         .then(data => {
             if (data.success) {
                 showNotification('Dashboard duplicated!', 'success');
-                window.location.href = `{% url 'dashboards:detail' 0 %}`.replace('0', data.dashboard_id);
+                window.location.href = `{% url 'dashboard:detail' 0 %}`.replace('0', data.dashboard_id);
             } else {
                 showNotification('Error duplicating dashboard', 'error');
             }
@@ -617,7 +617,7 @@ function duplicateDashboard() {
 function saveAsTemplate() {
     const name = prompt('Enter template name:');
     if (name) {
-        fetch(`{% url 'dashboards:detail' dashboard.pk %}template/`, {
+        fetch(`{% url 'dashboard:detail' dashboard.pk %}template/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

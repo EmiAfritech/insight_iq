@@ -13,6 +13,7 @@ urlpatterns = [
     path('dataset/<uuid:pk>/preview/', views.DataSetPreviewView.as_view(), name='dataset_preview'),
     
     # Analysis management
+    path('analyses/', views.AnalysisListView.as_view(), name='analysis_list'),
     path('analyze/<uuid:dataset_id>/', views.AnalysisCreateView.as_view(), name='analysis_create'),
     path('analysis/<uuid:pk>/', views.AnalysisDetailView.as_view(), name='analysis_detail'),
     path('analysis/<uuid:pk>/edit/', views.AnalysisUpdateView.as_view(), name='analysis_edit'),

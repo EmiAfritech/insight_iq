@@ -223,16 +223,9 @@
                     <div>
                         <h5 class="mb-2">Invite Team Members</h5>
                         <p class="mb-3">Add your colleagues to start collaborating on insights and analytics.</p>
-                        {% url 'tenants:invite_user' as invite_url %}
-                        {% if invite_url %}
-                            <a href="{{ invite_url }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-user-plus me-2"></i>Invite Users
-                            </a>
-                        {% else %}
-                            <button class="btn btn-outline-secondary btn-sm" disabled>
-                                <i class="fas fa-user-plus me-2"></i>Coming Soon
-                            </button>
-                        {% endif %}
+                        <a href="{% url 'tenants:invite_user' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-user-plus me-2"></i>Invite Users
+                        </a>
                     </div>
                 </div>
             </div>
@@ -243,9 +236,9 @@
                     <div>
                         <h5 class="mb-2">Connect Data Sources</h5>
                         <p class="mb-3">Import your data to start generating powerful insights and reports.</p>
-                        <button class="btn btn-outline-secondary btn-sm" disabled>
-                            <i class="fas fa-database me-2"></i>Coming Soon
-                        </button>
+                        <a href="{% url 'data_sources:create' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-database me-2"></i>Connect Data Source
+                        </a>
                     </div>
                 </div>
             </div>
@@ -256,9 +249,9 @@
                     <div>
                         <h5 class="mb-2">Create Your First Dashboard</h5>
                         <p class="mb-3">Build interactive dashboards to visualize your data and track key metrics.</p>
-                        <button class="btn btn-outline-secondary btn-sm" disabled>
-                            <i class="fas fa-chart-line me-2"></i>Coming Soon
-                        </button>
+                        <a href="{% url 'dashboard:create' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-chart-line me-2"></i>Create Dashboard
+                        </a>
                     </div>
                 </div>
             </div>
@@ -269,16 +262,9 @@
                     <div>
                         <h5 class="mb-2">Customize Settings</h5>
                         <p class="mb-3">Configure your organization settings, branding, and preferences.</p>
-                        {% url 'tenants:settings' as settings_url %}
-                        {% if settings_url %}
-                            <a href="{{ settings_url }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-cog me-2"></i>Organization Settings
-                            </a>
-                        {% else %}
-                            <button class="btn btn-outline-secondary btn-sm" disabled>
-                                <i class="fas fa-cog me-2"></i>Coming Soon
-                            </button>
-                        {% endif %}
+                        <a href="{% url 'tenants:settings' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-cog me-2"></i>Organization Settings
+                        </a>
                     </div>
                 </div>
             </div>
@@ -287,9 +273,9 @@
                 <h5>Ready to get started?</h5>
                 <p class="text-muted mb-3">Jump into your dashboard and start exploring InsightIQ's features.</p>
                 
-                <button class="btn btn-primary" disabled>
-                    <i class="fas fa-rocket me-2"></i>Dashboard Coming Soon
-                </button>
+                <a href="{% url 'dashboard:home' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket me-2"></i>Go to Dashboard
+                </a>
                 
                 <a href="{% url 'core:public_contact' %}" class="btn btn-outline-primary">
                     <i class="fas fa-question-circle me-2"></i>Need Help?

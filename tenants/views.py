@@ -18,7 +18,7 @@ class TenantCreateView(LoginRequiredMixin, CreateView):
     model = Tenant
     form_class = SimpleTenantCreationForm
     template_name = 'tenants/create_tenant.html'
-    success_url = reverse_lazy('tenants:setup')
+    success_url = reverse_lazy('dashboard:home')
     
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -41,7 +41,9 @@ class TenantCreateView(LoginRequiredMixin, CreateView):
             role='owner'
         )
         
-        messages.success(self.request, f"Organization '{self.object.name}' created successfully!")
+        success_msg = (f"🎉 Organization '{self.object.name}' created successfully! "
+                       "Welcome to InsightIQ!")
+        messages.success(self.request, success_msg)
         return response
 
 

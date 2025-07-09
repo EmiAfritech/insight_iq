@@ -150,6 +150,29 @@ class DataSetPreviewView(TenantRequiredMixin, LoginRequiredMixin, DetailView):
 
 
 # Analysis Views
+class AnalysisListView(TenantRequiredMixin, LoginRequiredMixin, ListView):
+    """List all analyses for the current tenant."""
+    model = Analysis
+    template_name = 'analytics/analysis_list.html'
+    context_object_name = 'analyses'
+    paginate_by = 20
+
+    def get_queryset(self):
+        queryset = Analysis.objects.filter(tenant=self.request.tenant)
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) | 
+                Q(description__icontains=search)
+            )
+        return queryset.order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+
+
 class AnalysisCreateView(TenantRequiredMixin, LoginRequiredMixin, CreateView):
     """Create a new analysis for a dataset."""
     model = Analysis
