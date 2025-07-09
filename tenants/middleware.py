@@ -64,17 +64,28 @@ class TenantRedirectMiddleware:
         
         # Check if user has a tenant
         try:
-            tenant_user = TenantUser.objects.get(user=request.user)
-            logger.info("User %s has tenant: %s", request.user.email, tenant_user.tenant.name)
+            tenant_users = TenantUser.objects.filter(user=request.user, is_active=True)
             
-            # If user is on root path and has a tenant, redirect to dashboard
-            if request.path == '/' or request.path == '/dashboard/':
-                logger.info("Redirecting user %s to dashboard", request.user.email)
-                return redirect('dashboard:home')
-            
-            # User has a tenant, continue normally
-            return None
-        except TenantUser.DoesNotExist:
-            # User doesn't have a tenant, redirect to tenant creation
-            logger.info("User %s has no tenant, redirecting to registration", request.user.email)
+            if tenant_users.exists():
+                # User has tenant(s), pick the first active one
+                tenant_user = tenant_users.first()
+                logger.info("User %s has tenant: %s", request.user.email, tenant_user.tenant.name)
+                
+                # Store tenant in session for consistency
+                request.session['current_tenant_id'] = str(tenant_user.tenant.id)
+                
+                # If user is on root path and has a tenant, redirect to dashboard
+                if request.path in ['/', '/dashboard/', '/tenants/register/']:
+                    logger.info("Redirecting user %s to dashboard", request.user.email)
+                    return redirect('dashboards:home')
+                
+                # User has a tenant, continue normally
+                return None
+            else:
+                # User doesn't have an active tenant, redirect to tenant creation
+                logger.info("User %s has no active tenant, redirecting to registration", 
+                           request.user.email)
+                return redirect('tenants:register')
+        except Exception as e:
+            logger.error("Error checking tenant for user %s: %s", request.user.email, str(e))
             return redirect('tenants:register')

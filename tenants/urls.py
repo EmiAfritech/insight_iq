@@ -15,4 +15,5 @@ urlpatterns = [
     path('users/<int:pk>/edit/', views.TenantUserEditView.as_view(), name='edit_user'),
     path('users/<int:pk>/delete/', views.TenantUserDeleteView.as_view(), name='delete_user'),
     path('debug/status/', debug_views.user_status, name='debug_status'),
+    path('debug/user-status/', debug_views.user_status_debug, name='debug_user_status'),
 ]

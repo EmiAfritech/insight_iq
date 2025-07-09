@@ -21,7 +21,7 @@
                 Dashboards
             </h2>
             <div>
-                <a href="{% url 'dashboard:create' %}" class="btn btn-primary">
+                <a href="{% url 'dashboards:create' %}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Create Dashboard
                 </a>
             </div>
@@ -80,7 +80,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-filter"></i> Apply Filters
                         </button>
-                        <a href="{% url 'dashboard:list' %}" class="btn btn-outline-secondary">
+                        <a href="{% url 'dashboards:list' %}" class="btn btn-outline-secondary">
                             <i class="fas fa-times"></i> Clear Filters
                         </a>
                     </div>
@@ -119,7 +119,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <h5 class="card-title">
-                                <a href="{% url 'dashboard:detail' dashboard.pk %}" class="text-decoration-none">
+                                <a href="{% url 'dashboards:detail' dashboard.pk %}" class="text-decoration-none">
                                     {{ dashboard.name }}
                                 </a>
                             </h5>
@@ -129,20 +129,20 @@
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="{% url 'dashboard:detail' dashboard.pk %}">
+                                    <li><a class="dropdown-item" href="{% url 'dashboards:detail' dashboard.pk %}">
                                         <i class="fas fa-eye"></i> View
                                     </a></li>
-                                    <li><a class="dropdown-item" href="{% url 'dashboard:edit' dashboard.pk %}">
+                                    <li><a class="dropdown-item" href="{% url 'dashboards:edit' dashboard.pk %}">
                                         <i class="fas fa-edit"></i> Edit
                                     </a></li>
                                     <li><a class="dropdown-item" href="#" onclick="duplicateDashboard('{{ dashboard.pk }}')">
                                         <i class="fas fa-copy"></i> Duplicate
                                     </a></li>
-                                    <li><a class="dropdown-item" href="{% url 'dashboard:share' dashboard.pk %}">
+                                    <li><a class="dropdown-item" href="{% url 'dashboards:share' dashboard.pk %}">
                                         <i class="fas fa-share"></i> Share
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="{% url 'dashboard:delete' dashboard.pk %}">
+                                    <li><a class="dropdown-item text-danger" href="{% url 'dashboards:delete' dashboard.pk %}">
                                         <i class="fas fa-trash"></i> Delete
                                     </a></li>
                                 </ul>
@@ -196,7 +196,7 @@
                     <i class="fas fa-tachometer-alt fa-3x text-muted mb-3"></i>
                     <h4 class="text-muted">No dashboards found</h4>
                     <p class="text-muted">Create your first dashboard to get started with data visualization.</p>
-                    <a href="{% url 'dashboard:create' %}" class="btn btn-primary">
+                    <a href="{% url 'dashboards:create' %}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Create Dashboard
                     </a>
                 </div>

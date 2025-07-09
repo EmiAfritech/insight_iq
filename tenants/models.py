@@ -74,7 +74,7 @@ class TenantUser(models.Model):
     """
     Extended user model for tenant-specific information
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tenant_users')
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='tenant_users')
     
     # User Role

@@ -145,7 +145,7 @@
         </div>
         
         <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
-            <a href="{% url 'dashboard:create' %}" class="text-decoration-none">
+            <a href="{% url 'dashboards:create' %}" class="text-decoration-none">
                 <div class="card quick-action-card h-100 text-center p-4">
                     <div class="card-body">
                         <i class="fas fa-plus-circle fa-3x text-success mb-3"></i>
@@ -189,7 +189,7 @@
                 <div class="card-header bg-white py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">Recent Dashboards</h6>
-                        <a href="{% url 'dashboard:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                        <a href="{% url 'dashboards:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -205,14 +205,14 @@
                                     <small class="text-muted">Updated {{ dashboard.updated_at|timesince }} ago</small>
                                 </div>
                             </div>
-                            <a href="{% url 'dashboard:detail' dashboard.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'dashboards:detail' dashboard.pk %}" class="btn btn-sm btn-outline-primary">View</a>
                         </div>
                         {% endfor %}
                     {% else %}
                         <div class="text-center py-4">
                             <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
                             <p class="text-muted">No dashboards yet. Create your first dashboard to get started!</p>
-                            <a href="{% url 'dashboard:create' %}" class="btn btn-primary">Create Dashboard</a>
+                            <a href="{% url 'dashboards:create' %}" class="btn btn-primary">Create Dashboard</a>
                         </div>
                     {% endif %}
                 </div>

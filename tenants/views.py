@@ -18,7 +18,21 @@ class TenantCreateView(LoginRequiredMixin, CreateView):
     model = Tenant
     form_class = SimpleTenantCreationForm
     template_name = 'tenants/create_tenant.html'
-    success_url = reverse_lazy('dashboard:home')
+    success_url = reverse_lazy('dashboards:home')
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Check if user already has an active tenant
+        if request.user.is_authenticated:
+            existing_tenant_users = TenantUser.objects.filter(
+                user=request.user, 
+                is_active=True
+            )
+            if existing_tenant_users.exists():
+                # User already has an active tenant, redirect to dashboard
+                messages.info(request, "You already have an active organization. Redirecting to dashboard.")
+                return redirect('dashboards:home')
+        
+        return super().dispatch(request, *args, **kwargs)
     
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -35,11 +49,20 @@ class TenantCreateView(LoginRequiredMixin, CreateView):
         )
         
         # Create tenant user for the current user as owner
-        TenantUser.objects.create(
+        tenant_user, created = TenantUser.objects.get_or_create(
             user=self.request.user,
-            tenant=self.object,
-            role='owner'
+            defaults={
+                'tenant': self.object,
+                'role': 'owner'
+            }
         )
+        
+        # If tenant user already existed, update it to point to new tenant
+        if not created:
+            tenant_user.tenant = self.object
+            tenant_user.role = 'owner'
+            tenant_user.is_active = True
+            tenant_user.save()
         
         success_msg = (f"🎉 Organization '{self.object.name}' created successfully! "
                        "Welcome to InsightIQ!")
@@ -97,7 +120,7 @@ class TenantSettingsView(LoginRequiredMixin, UpdateView):
             tenant_user = TenantUser.objects.get(user=request.user)
             if not tenant_user.can_manage_settings:
                 messages.error(request, "You don't have permission to manage tenant settings.")
-                return redirect('dashboard:home')
+                return redirect('dashboards:home')
         except TenantUser.DoesNotExist:
             messages.error(request, "You are not associated with any tenant.")
             return redirect('core:landing')
@@ -128,7 +151,7 @@ class TenantUserListView(LoginRequiredMixin, ListView):
             tenant_user = TenantUser.objects.get(user=request.user)
             if not tenant_user.can_manage_users:
                 messages.error(request, "You don't have permission to manage users.")
-                return redirect('dashboard:home')
+                return redirect('dashboards:home')
         except TenantUser.DoesNotExist:
             messages.error(request, "You are not associated with any tenant.")
             return redirect('core:landing')
@@ -148,7 +171,7 @@ class TenantUserInviteView(LoginRequiredMixin, FormView):
             self.tenant_user = TenantUser.objects.get(user=request.user)
             if not self.tenant_user.can_manage_users:
                 messages.error(request, "You don't have permission to invite users.")
-                return redirect('dashboard:home')
+                return redirect('dashboards:home')
         except TenantUser.DoesNotExist:
             messages.error(request, "You are not associated with any tenant.")
             return redirect('core:landing')
@@ -245,7 +268,7 @@ class TenantUserEditView(LoginRequiredMixin, UpdateView):
             tenant_user = TenantUser.objects.get(user=request.user)
             if not tenant_user.can_manage_users:
                 messages.error(request, "You don't have permission to edit users.")
-                return redirect('dashboard:home')
+                return redirect('dashboards:home')
         except TenantUser.DoesNotExist:
             messages.error(request, "You are not associated with any tenant.")
             return redirect('core:landing')
@@ -273,7 +296,7 @@ class TenantUserDeleteView(LoginRequiredMixin, DeleteView):
             tenant_user = TenantUser.objects.get(user=request.user)
             if not tenant_user.can_manage_users:
                 messages.error(request, "You don't have permission to delete users.")
-                return redirect('dashboard:home')
+                return redirect('dashboards:home')
         except TenantUser.DoesNotExist:
             messages.error(request, "You are not associated with any tenant.")
             return redirect('core:landing')
